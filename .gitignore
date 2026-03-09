@@ -1,3 +1,5 @@
 backend/.env
 backend/venv
 backend/Dockerfile
+backend/__pycache__
+backend/routers/__pycache__
