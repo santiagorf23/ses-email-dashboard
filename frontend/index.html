@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SES Mail Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171923;
+    --surface2: #1e2433;
+    --surface3: #252d3d;
+    --border: #2a3347;
+    --border2: #374155;
+    --accent: #4f8ef7;
+    --accent-dim: rgba(79,142,247,0.12);
+    --accent-glow: rgba(79,142,247,0.25);
+    --text: #e2e8f0;
+    --text2: #8896ae;
+    --text3: #5a6783;
+    --green: #34d399;
+    --green-dim: rgba(52,211,153,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --yellow: #fbbf24;
+    --yellow-dim: rgba(251,191,36,0.12);
+    --orange: #fb923c;
+    --orange-dim: rgba(251,146,60,0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --sidebar-w: 260px;
+    --header-h: 52px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; flex-direction: column; gap: 0;
+    background: var(--bg);
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 44px;
+    width: 380px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .login-logo {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 32px;
+  }
+  .login-logo .icon {
+    width: 36px; height: 36px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .login-logo h1 { font-size: 16px; font-weight: 600; color: var(--text); }
+  .login-logo span { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+  .field input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 10px 14px; color: var(--text); font-family: var(--sans); font-size: 14px;
+    outline: none; transition: border-color .2s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 7px; padding: 11px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: opacity .2s; margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: .88; }
+  .login-error { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; }
+
+  /* ── LAYOUT ── */
+  #app { display: flex; height: 100vh; }
+  #app.hidden { display: none; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); min-width: var(--sidebar-w);
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 0; overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sidebar-header .logo-icon {
+    width: 30px; height: 30px; background: var(--accent);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .sidebar-header h2 { font-size: 13px; font-weight: 600; }
+  .sidebar-header p { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+  .sidebar-nav { padding: 12px 10px; flex: 1; }
+  .nav-section { margin-bottom: 20px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; color: var(--text2); transition: all .15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+  .nav-item .ni-icon { font-size: 15px; width: 20px; text-align: center; }
+  .nav-item .ni-count {
+    margin-left: auto; background: var(--surface3);
+    border-radius: 10px; padding: 1px 7px; font-size: 11px;
+    font-family: var(--mono); color: var(--text2);
+  }
+  .nav-item.active .ni-count { background: var(--accent-glow); color: var(--accent); }
+
+  .stats-box { margin: 0 10px 12px; }
+  .stat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 12px; margin-bottom: 4px;
+  }
+  .stat-row .sr-label { color: var(--text2); }
+  .stat-row .sr-val { font-family: var(--mono); font-weight: 500; }
+
+  .sidebar-footer {
+    border-top: 1px solid var(--border); padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 28px; height: 28px; background: var(--accent-dim);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0;
+  }
+  .sidebar-footer .sf-name { font-size: 12px; font-weight: 500; }
+  .sidebar-footer .sf-role { font-size: 10px; color: var(--text3); }
+  .btn-logout {
+    margin-left: auto; background: none; border: 1px solid var(--border);
+    color: var(--text2); border-radius: 5px; padding: 4px 8px;
+    font-size: 11px; cursor: pointer; transition: all .15s;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── MAIN PANEL ── */
+  .main-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    height: var(--header-h); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 20px; gap: 12px;
+    background: var(--surface); flex-shrink: 0;
+  }
+  .topbar-title { font-size: 14px; font-weight: 600; margin-right: 8px; }
+  .search-wrap { flex: 1; max-width: 420px; position: relative; }
+  .search-wrap input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: 7px 14px 7px 36px;
+    color: var(--text); font-family: var(--sans); font-size: 13px; outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap .si { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+  .filter-row { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  .filter-select {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; color: var(--text);
+    font-family: var(--sans); font-size: 12px; outline: none; cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  input[type="date"].filter-select { color-scheme: dark; }
+
+  /* ── EMAIL LIST ── */
+  .email-list-panel {
+    display: flex; flex-direction: column; overflow: hidden;
+    flex: 1;
+  }
+  .email-list { overflow-y: auto; flex: 1; }
+  .email-list::-webkit-scrollbar { width: 5px; }
+  .email-list::-webkit-scrollbar-track { background: transparent; }
+  .email-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .email-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 72px 96px;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    min-height: 52px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .1s;
+    font-size: 13px;
+  }
+  .email-row:hover { background: var(--surface2); }
+  .email-row.selected { background: var(--accent-dim); }
+  .email-row .er-flags { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .flag { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .flag.bounce { background: var(--red); }
+  .flag.complaint { background: var(--orange); }
+  .er-main { min-width: 0; padding: 12px 14px 12px 0; }
+  .er-to { font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .er-subject { color: var(--text2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .er-date { font-family: var(--mono); font-size: 11px; color: var(--text3); white-space: nowrap; text-align: right; padding-right: 10px; }
+  .er-status { display: flex; justify-content: flex-end; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;
+    font-family: var(--mono); white-space: nowrap;
+  }
+  .badge.delivered { background: var(--green-dim); color: var(--green); }
+  .badge.sent      { background: var(--accent-dim); color: var(--accent); }
+  .badge.bounce    { background: var(--red-dim); color: var(--red); }
+  .badge.complaint { background: var(--orange-dim); color: var(--orange); }
+  .badge.failed    { background: var(--red-dim); color: var(--red); }
+  .badge.open      { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.click     { background: var(--yellow-dim); color: var(--yellow); }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .pag-info { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+  .pag-btns { display: flex; gap: 6px; }
+  .pag-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 5px; padding: 4px 12px;
+    font-size: 12px; cursor: pointer; transition: all .15s;
+    font-family: var(--mono);
+  }
+  .pag-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pag-btn:disabled { opacity: .4; cursor: default; }
+  .pag-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* ── SPLIT VIEW ── */
+  .split-view { display: flex; height: 100%; overflow: hidden; }
+  .split-list { width: 420px; min-width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .split-detail { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel { flex: 1; overflow-y: auto; padding: 28px 32px; }
+  .detail-panel::-webkit-scrollbar { width: 5px; }
+  .detail-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .detail-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text3); gap: 12px;
+  }
+  .detail-empty .de-icon { font-size: 40px; opacity: .3; }
+  .detail-empty p { font-size: 14px; }
+
+  .detail-header { margin-bottom: 24px; }
+  .detail-subject { font-size: 20px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; }
+  .detail-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+  .detail-meta span strong { color: var(--text); font-weight: 500; }
+  .detail-status { display: flex; align-items: center; gap: 8px; }
+  .detail-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .content-frame {
+    background: #fff; border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+  .content-frame iframe {
+    width: 100%; border: none; min-height: 300px; display: block;
+  }
+  .content-plain {
+    background: var(--surface2); border-radius: 8px;
+    padding: 20px; font-family: var(--mono); font-size: 13px;
+    color: var(--text2); white-space: pre-wrap; line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+
+  .events-section { margin-top: 28px; }
+  .events-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+  .event-timeline { position: relative; padding-left: 20px; }
+  .event-timeline::before {
+    content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
+    width: 1px; background: var(--border2);
+  }
+  .event-item { position: relative; margin-bottom: 16px; }
+  .event-dot {
+    position: absolute; left: -17px; top: 4px;
+    width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--bg);
+  }
+  .event-dot.send     { background: var(--accent); }
+  .event-dot.delivery { background: var(--green); }
+  .event-dot.bounce   { background: var(--red); }
+  .event-dot.complaint{ background: var(--orange); }
+  .event-dot.open     { background: var(--yellow); }
+  .event-dot.click    { background: var(--yellow); }
+  .event-dot.default  { background: var(--text3); }
+
+  .event-type { font-size: 12px; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: .05em; }
+  .event-time { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 2px; }
+  .event-data {
+    margin-top: 6px; background: var(--surface2); border-radius: 6px;
+    padding: 8px 12px; font-family: var(--mono); font-size: 11px;
+    color: var(--text2); border: 1px solid var(--border); line-height: 1.5;
+    white-space: pre-wrap; word-break: break-all;
+  }
+
+
+  /* ── ATTACHMENTS ── */
+  .attach-section { margin-top: 16px; margin-bottom: 4px; }
+  .attach-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+  .attach-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .attach-item {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 12px; font-size: 12px;
+    transition: border-color .15s;
+  }
+  .attach-item:hover { border-color: var(--accent); }
+  .attach-icon { font-size: 15px; }
+  .attach-name { color: var(--text); font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attach-size { color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .attach-badge { font-size: 10px; background: var(--accent-dim); color: var(--accent); border-radius: 4px; padding: 1px 6px; font-family: var(--mono); }
+  .attach-actions { display: flex; gap: 5px; margin-left: auto; }
+  .attach-btn {
+    background: none; border: 1px solid var(--border2); border-radius: 5px;
+    color: var(--text2); padding: 3px 8px; font-size: 11px; cursor: pointer;
+    transition: all .15s; white-space: nowrap;
+  }
+  .attach-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .attach-btn.dl { border-color: var(--green); color: var(--green); }
+  .attach-btn.dl:hover { background: var(--green-dim); }
+
+  /* ── PDF MODAL ── */
+  .pdf-modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .pdf-modal-overlay.open { display: flex; }
+  .pdf-modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 12px; overflow: hidden;
+    width: 90vw; max-width: 900px; height: 88vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  }
+  .pdf-modal-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .pdf-modal-title { font-size: 14px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pdf-modal-actions { display: flex; gap: 8px; }
+  .pdf-modal-close {
+    background: none; border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--text2); width: 30px; height: 30px; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .pdf-modal-close:hover { border-color: var(--red); color: var(--red); }
+  .pdf-modal-body { flex: 1; overflow: hidden; background: #525659; }
+  .pdf-modal-body iframe { width: 100%; height: 100%; border: none; }
+  .pdf-modal-body .pdf-nopreview {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; gap: 16px; color: var(--text2);
+  }
+  .pdf-modal-body .pdf-nopreview .pnp-icon { font-size: 48px; opacity: .4; }
+  .pdf-modal-body .pdf-nopreview p { font-size: 14px; }
+
+  /* ── EVENTS TOGGLE ── */
+  .events-section { margin-top: 28px; }
+  .events-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface2);
+    transition: background .15s; user-select: none;
+  }
+  .events-header:hover { background: var(--surface3); }
+  .events-header-left { display: flex; align-items: center; gap: 8px; }
+  .events-toggle-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; }
+  .events-count { font-size: 11px; font-family: var(--mono); background: var(--surface3); color: var(--text3); border-radius: 10px; padding: 1px 8px; }
+  .events-chevron { font-size: 12px; color: var(--text3); transition: transform .2s; }
+  .events-chevron.open { transform: rotate(180deg); }
+  .events-body { overflow: hidden; transition: max-height .3s ease; }
+  .events-body.collapsed { max-height: 0 !important; }
+  .event-timeline { position: relative; padding: 16px 0 4px 20px; }
+
+  /* ── BLOCKED VIEW ── */
+  .blocked-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .blocked-table th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+  }
+  .blocked-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+  .blocked-table tr:hover td { background: var(--surface2); }
+  .blocked-table .email-cell { font-family: var(--mono); color: var(--red); }
+  .blocked-table .date-cell { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  .view-content { flex: 1; overflow-y: auto; padding: 24px; }
+  .view-content::-webkit-scrollbar { width: 5px; }
+  .view-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .section-header { margin-bottom: 20px; }
+  .section-header h2 { font-size: 17px; font-weight: 600; }
+  .section-header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* ── STATS CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .stat-card .sc-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+  .stat-card .sc-val { font-size: 28px; font-weight: 600; font-family: var(--mono); }
+  .stat-card .sc-sub { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+  .loading { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
+  .error-msg { text-align: center; padding: 32px; color: var(--red); font-size: 13px; }
+
+  .topbar-count { font-size: 11px; color: var(--text3); font-family: var(--mono); background: var(--surface2); border-radius: 10px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">✉</div>
+      <div>
+        <h1>SES Dashboard</h1>
+        <span>Amazon SES · Bandeja interna</span>
+      </div>
+    </div>
+    <div class="login-title">Iniciar sesión</div>
+    <div class="login-sub">Acceso restringido al equipo interno</div>
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" value="admin" />
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" value="admin123" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">✉</div>
+      <div>
+        <h2>SES Dashboard</h2>
+        <p>Amazon SES</p>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label">Bandeja</div>
+        <button class="nav-item active" id="nav-inbox" onclick="showView('inbox')">
+          <span class="ni-icon">📨</span> Enviados
+          <span class="ni-count" id="count-all">—</span>
+        </button>
+        <button class="nav-item" id="nav-blocked" onclick="showView('blocked')">
+          <span class="ni-icon">🚫</span> Bloqueados
+        </button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Estado</div>
+        <button class="nav-item" onclick="filterByStatus('delivered')">
+          <span class="ni-icon">✅</span> Entregados
+          <span class="ni-count" id="count-delivered">—</span>
+        </button>
+        <button class="nav-item" onclick="filterByStatus('open')">
+          <span class="ni-icon">👁️</span> Abiertos
+          <span class="ni-count" id="count-open">—</span>
+        </button>
+        <button class="nav-item" onclick="filterByStatus('bounce')">
+          <span class="ni-icon">⚠️</span> Bounce
+          <span class="ni-count" id="count-bounce">—</span>
+        </button>
+        <button class="nav-item" onclick="filterByStatus('complaint')">
+          <span class="ni-icon">🚩</span> Complaint
+          <span class="ni-count" id="count-complaint">—</span>
+        </button>
+      </div>
+    </div>
+    <div class="stats-box">
+      <div class="stat-row" style="background:var(--green-dim)">
+        <span class="sr-label">Tasa entrega</span>
+        <span class="sr-val" id="sb-delivery" style="color:var(--green)">—</span>
+      </div>
+      <div class="stat-row" style="background:var(--red-dim)">
+        <span class="sr-label">Tasa bounce</span>
+        <span class="sr-val" id="sb-bounce" style="color:var(--red)">—</span>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar" id="sf-avatar">A</div>
+      <div>
+        <div class="sf-name" id="sf-name">Administrador</div>
+        <div class="sf-role">Acceso interno</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-panel">
+    <div id="view-inbox" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <span class="topbar-title">Correos enviados</span>
+        <div class="search-wrap">
+          <span class="si">🔍</span>
+          <input type="text" id="q-search" placeholder="Buscar por destinatario o asunto…" oninput="debounceSearch()" />
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" id="q-status" onchange="loadEmails(1)">
+            <option value="">Todos los estados</option>
+            <option value="delivered">Entregado</option>
+            <option value="sent">Enviado</option>
+            <option value="open">Abierto</option>
+            <option value="bounce">Bounce</option>
+            <option value="complaint">Complaint</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)">
+            <span>Desde</span>
+            <input type="date" class="filter-select" id="q-from" onchange="loadEmails(1)" style="width:130px" />
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)">
+            <span>Hasta</span>
+            <input type="date" class="filter-select" id="q-to" onchange="loadEmails(1)" style="width:130px" />
+          </div>
+        </div>
+      </div>
+      <!-- SPLIT -->
+      <div class="split-view">
+        <div class="split-list" id="split-list">
+          <div class="email-list-panel">
+            <div class="email-list" id="email-list"></div>
+            <div class="pagination" id="pagination"></div>
+          </div>
+        </div>
+        <div class="split-detail" id="split-detail">
+          <div class="detail-empty">
+            <div class="de-icon">✉️</div>
+            <p>Selecciona un correo para ver el detalle</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-blocked" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+      <div class="topbar">
+        <span class="topbar-title">🚫 Correos bloqueados</span>
+      </div>
+      <div class="view-content">
+        <div class="section-header">
+          <h2>Lista de bloqueos</h2>
+          <p>Correos marcados por hard bounce o complaint. No se enviarán correos a estas direcciones.</p>
+        </div>
+        <table class="blocked-table">
+          <thead><tr><th>Email</th><th>Motivo</th><th>Fecha de bloqueo</th></tr></thead>
+          <tbody id="blocked-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div class="pdf-modal-overlay" id="pdf-modal" onclick="closePdfModal(event)">
+  <div class="pdf-modal">
+    <div class="pdf-modal-header">
+      <span class="pdf-modal-title" id="pdf-modal-title">Adjunto</span>
+      <div class="pdf-modal-actions">
+        <button class="attach-btn dl" id="pdf-modal-dl" onclick="downloadAttachment()">⬇ Descargar</button>
+        <button class="pdf-modal-close" onclick="closePdfModal(null)" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="pdf-modal-body" id="pdf-modal-body">
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000/api';
+let token = localStorage.getItem('ses_token') || '';
+let currentPage = 1;
+let searchTimer;
+let selectedEmailId = null;
+
+// ── AUTH ──────────────────────────────────────────────
+async function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  document.getElementById('login-error').textContent = '';
+  try {
+    const fd = new FormData();
+    fd.append('username', u); fd.append('password', p);
+    const r = await fetch(`${API}/auth/login`, { method: 'POST', body: fd });
+    if (!r.ok) throw new Error('Credenciales incorrectas');
+    const data = await r.json();
+    token = data.access_token;
+    localStorage.setItem('ses_token', token);
+    document.getElementById('sf-name').textContent = data.full_name || u;
+    document.getElementById('sf-avatar').textContent = (data.full_name || u)[0].toUpperCase();
+    showApp();
+  } catch (e) {
+    document.getElementById('login-error').textContent = e.message;
+  }
+}
+
+function doLogout() {
+  token = ''; localStorage.removeItem('ses_token');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function apiFetch(path, opts = {}) {
+  const r = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: { 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) }
+  });
+  if (r.status === 401) { doLogout(); throw new Error('Session expired'); }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ── INIT ──────────────────────────────────────────────
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.remove('hidden');
+  await Promise.all([loadStats(), loadEmails(1)]);
+}
+
+async function loadStats() {
+  try {
+    const s = await apiFetch('/emails/stats');
+    document.getElementById('count-all').textContent = s.total_sent;
+    document.getElementById('count-delivered').textContent = s.total_delivered;
+    document.getElementById('count-bounce').textContent = s.total_bounce;
+    document.getElementById('count-complaint').textContent = s.total_complaint;
+    const openEl = document.getElementById('count-open');
+    if (openEl) openEl.textContent = s.total_open || 0;
+    document.getElementById('sb-delivery').textContent = s.delivery_rate + '%';
+    document.getElementById('sb-bounce').textContent = s.bounce_rate + '%';
+  } catch {}
+}
+
+// ── EMAIL LIST ─────────────────────────────────────────
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadEmails(1), 380);
+}
+
+function filterByStatus(s) {
+  document.getElementById('q-status').value = s;
+  loadEmails(1);
+  showView('inbox');
+}
+
+async function loadEmails(page = 1) {
+  currentPage = page;
+  const search = document.getElementById('q-search').value.trim();
+  const status = document.getElementById('q-status').value;
+  const from   = document.getElementById('q-from').value;
+  const to     = document.getElementById('q-to').value;
+  const list   = document.getElementById('email-list');
+  list.innerHTML = '<div class="loading">Cargando…</div>';
+
+  try {
+    let data;
+    if (search) {
+      // Búsqueda de texto: usa endpoint /search con OR (destinatario O asunto)
+      const params = new URLSearchParams({ q: search, page, per_page: 25 });
+      data = await apiFetch(`/emails/search?${params}`);
+    } else {
+      // Filtros normales sin texto
+      const params = new URLSearchParams({ page, per_page: 25 });
+      if (status) params.set('status', status);
+      if (from)   params.set('date_from', from);
+      if (to)     params.set('date_to', to);
+      data = await apiFetch(`/emails?${params}`);
+    }
+    renderList(data);
+  } catch (e) {
+    list.innerHTML = `<div class="error-msg">Error al cargar: ${e.message}</div>`;
+  }
+}
+
+function renderList({ items, total, page, pages, per_page }) {
+  const list = document.getElementById('email-list');
+  if (!items.length) {
+    list.innerHTML = '<div class="loading">No hay correos que coincidan con la búsqueda.</div>';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  list.innerHTML = items.map(e => `
+    <div class="email-row ${selectedEmailId === e.id ? 'selected' : ''}"
+         onclick="openEmail(${e.id}, this)">
+      <div class="er-flags">
+        ${e.has_bounce ? '<div class="flag bounce" title="Bounce"></div>' : ''}
+        ${e.has_complaint ? '<div class="flag complaint" title="Complaint"></div>' : ''}
+      </div>
+      <div class="er-main">
+        <div class="er-to">
+          ${esc(e.email_to)}
+          ${e.has_attachments ? '<span title="Tiene adjuntos" style="margin-left:5px;font-size:11px;opacity:.6">📎</span>' : ''}
+        </div>
+        <div class="er-subject">${esc(e.subject || '(sin asunto)')}</div>
+      </div>
+      <div class="er-date">${fmtDate(e.created_at)}</div>
+      <div class="er-status">${statusBadge(e.status)}</div>
+    </div>
+  `).join('');
+
+  // Pagination
+  const pag = document.getElementById('pagination');
+  const start = (page - 1) * per_page + 1;
+  const end   = Math.min(page * per_page, total);
+  pag.innerHTML = `
+    <span class="pag-info">${start}–${end} de ${total}</span>
+    <div class="pag-btns">
+      <button class="pag-btn" onclick="loadEmails(${page - 1})" ${page <= 1 ? 'disabled' : ''}>← Anterior</button>
+      <button class="pag-btn active">${page} / ${pages}</button>
+      <button class="pag-btn" onclick="loadEmails(${page + 1})" ${page >= pages ? 'disabled' : ''}>Siguiente →</button>
+    </div>
+  `;
+}
+
+// ── EMAIL DETAIL ───────────────────────────────────────
+async function openEmail(id, row) {
+  selectedEmailId = id;
+  document.querySelectorAll('.email-row').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  const detail = document.getElementById('split-detail');
+  detail.innerHTML = '<div class="detail-empty"><div class="de-icon">⏳</div><p>Cargando…</p></div>';
+  try {
+    const e = await apiFetch(`/emails/${id}`);
+    renderDetail(e, detail);
+  } catch (err) {
+    detail.innerHTML = `<div class="detail-empty"><p style="color:var(--red)">Error: ${err.message}</p></div>`;
+  }
+}
+
+function renderDetail(e, container) {
+  // Renderizar como HTML a menos que sea explícitamente text/plain
+  const isPlainText = (e.mime_type || '').toLowerCase() === 'text/plain';
+
+  // Sección de adjuntos PDF/archivos
+  let attachHtml = '';
+  if (e.has_attachments && e.attachments) {
+    const attachList = Array.isArray(e.attachments) ? e.attachments : [e.attachments];
+    const items = attachList.map((a, i) => {
+      const name    = a.filename || a.name || 'archivo';
+      const size    = a.size ? formatSize(a.size) : '';
+      const ext     = name.split('.').pop().toUpperCase();
+      const icon    = ext === 'PDF' ? '📄' : (ext === 'XLSX' || ext === 'XLS') ? '📊' : '📎';
+      const canView = ['PDF','PNG','JPG','JPEG','GIF','WEBP'].includes(ext);
+      const hasUrl  = !!(a.url || a.s3_url || a.download_url);
+      const safeA   = esc(JSON.stringify(a).replace(/'/g, '&#39;'));
+      return `<div class="attach-item">
+        <span class="attach-icon">${icon}</span>
+        <span class="attach-name" title="${esc(name)}">${esc(name)}</span>
+        ${size ? `<span class="attach-size">${size}</span>` : ''}
+        <span class="attach-badge">${ext}</span>
+        <div class="attach-actions">
+          ${canView ? `<button class="attach-btn" onclick='openAttachment(${safeA})'>👁 Ver</button>` : ''}
+          ${hasUrl  ? `<button class="attach-btn dl" onclick='downloadAttachment(${safeA})'>⬇ Descargar</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    attachHtml = `<div class="attach-section">
+      <div class="attach-title">📎 Adjuntos (${attachList.length})</div>
+      <div class="attach-list">${items}</div>
+    </div>`;
+  }
+
+  const eventsHtml = e.events.map(ev => {
+    const dot = ['send','delivery','bounce','complaint','open','click'].includes(ev.event_type) ? ev.event_type : 'default';
+    const dataStr = ev.event_data ? JSON.stringify(ev.event_data, null, 2) : '';
+    return `
+      <div class="event-item">
+        <div class="event-dot ${dot}"></div>
+        <div class="event-type">${esc(ev.event_type)}</div>
+        <div class="event-time">${fmtDateFull(ev.created_at)}</div>
+        ${dataStr ? `<div class="event-data">${esc(dataStr)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Decidir cómo mostrar el contenido
+  let contentHtml = '';
+  if (!e.content) {
+    contentHtml = `<div class="content-plain" style="color:var(--text3);font-style:italic">Sin contenido almacenado</div>`;
+  } else if (isPlainText) {
+    contentHtml = `<div class="content-plain">${esc(e.content)}</div>`;
+  } else {
+    // HTML: siempre usar iframe para renderizado real
+    contentHtml = `<div class="content-frame"><iframe id="email-iframe" sandbox="allow-same-origin" scrolling="yes" style="width:100%;border:none;min-height:300px;display:block;"></iframe></div>`;
+  }
+
+  container.innerHTML = `
+    <div class="detail-panel">
+      <div class="detail-header">
+        <div class="detail-subject">${esc(e.subject || '(sin asunto)')}</div>
+        <div class="detail-meta">
+          <span><strong>De:</strong> ${esc(e.email_from || '—')}</span>
+          <span><strong>Para:</strong> ${esc(e.email_to)}</span>
+          <span><strong>Enviado:</strong> ${fmtDateFull(e.created_at)}</span>
+        </div>
+        <div class="detail-status">
+          ${statusBadge(e.status)}
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${esc(e.message_id || '')}</span>
+        </div>
+      </div>
+      ${attachHtml}
+      <div class="detail-divider"></div>
+      ${contentHtml}
+      ${e.events.length ? `
+        <div class="events-section">
+          <div class="events-header" onclick="toggleEvents(this)">
+            <div class="events-header-left">
+              <span class="events-toggle-title">Historial de eventos</span>
+              <span class="events-count">${e.events.length} evento${e.events.length !== 1 ? 's' : ''}</span>
+            </div>
+            <span class="events-chevron">▼</span>
+          </div>
+          <div class="events-body collapsed" style="max-height:0">
+            <div class="event-timeline">${eventsHtml}</div>
+          </div>
+        </div>` : ''}
+    </div>`;
+
+  // Escribir el HTML en el iframe DESPUÉS de que el DOM se actualice
+  if (e.content && !isPlainText) {
+    requestAnimationFrame(() => {
+      const iframe = document.getElementById('email-iframe');
+      if (!iframe) return;
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(e.content);
+        doc.close();
+        // Ajustar altura al contenido real
+        const resize = () => {
+          try {
+            const h = doc.documentElement.scrollHeight || doc.body.scrollHeight;
+            iframe.style.height = Math.max(300, h + 30) + 'px';
+          } catch {}
+        };
+        setTimeout(resize, 150);
+        setTimeout(resize, 600); // segunda pasada por imágenes que cargan tarde
+      } catch (err) {
+        console.warn('iframe render error:', err);
+      }
+    });
+  }
+}
+
+// ── BLOCKED VIEW ───────────────────────────────────────
+async function loadBlocked() {
+  const tbody = document.getElementById('blocked-tbody');
+  tbody.innerHTML = '<tr><td colspan="3" class="loading">Cargando…</td></tr>';
+  try {
+    const rows = await apiFetch('/emails/blocked');
+    tbody.innerHTML = rows.length
+      ? rows.map(b => `
+          <tr>
+            <td class="email-cell">${esc(b.email)}</td>
+            <td>${esc(b.reason || '—')}</td>
+            <td class="date-cell">${fmtDateFull(b.created_at)}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--text3)">Sin bloqueos registrados</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="3" class="error-msg">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ── NAV ───────────────────────────────────────────────
+function showView(v) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-inbox').style.display = 'none';
+  document.getElementById('view-blocked').style.display = 'none';
+  if (v === 'inbox') {
+    document.getElementById('nav-inbox').classList.add('active');
+    document.getElementById('view-inbox').style.display = 'flex';
+  } else {
+    document.getElementById('nav-blocked').classList.add('active');
+    document.getElementById('view-blocked').style.display = 'flex';
+    loadBlocked();
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// Timezone del servidor/BD — ajusta si tu servidor usa otra zona
+const TZ = 'America/Bogota';  // UTC-5 Colombia
+
+function fmtDate(d) {
+  const dt  = new Date(d);
+  const now = new Date();
+  const dtLocal  = new Date(dt.toLocaleString('en-US', { timeZone: TZ }));
+  const nowLocal = new Date(now.toLocaleString('en-US', { timeZone: TZ }));
+  if (dtLocal.toDateString() === nowLocal.toDateString()) {
+    return dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+  }
+  return dt.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', timeZone: TZ });
+}
+
+function fmtDateFull(d) {
+  return new Date(d).toLocaleString('es-CO', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+    timeZone: TZ
+  });
+}
+
+// Normaliza PascalCase de la BD a lowercase para CSS y labels
+function normalizeStatus(s) {
+  if (!s) return 'sent';
+  return s.toLowerCase();
+}
+const STATUS_LABELS = {
+  delivery: 'Entregado', delivered: 'Entregado',
+  send: 'Enviado',       sent: 'Enviado',
+  bounce: 'Bounce',
+  complaint: 'Complaint',
+  open: 'Abierto',
+  click: 'Click',
+  failed: 'Fallido'
+};
+const STATUS_CSS = {
+  delivery: 'delivered', delivered: 'delivered',
+  send: 'sent',          sent: 'sent',
+  bounce: 'bounce',
+  complaint: 'complaint',
+  open: 'open',
+  click: 'click',
+  failed: 'failed'
+};
+function statusBadge(s) {
+  const key = normalizeStatus(s);
+  const cls = STATUS_CSS[key] || 'sent';
+  const label = STATUS_LABELS[key] || s;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// ── EVENTOS TOGGLE ────────────────────────────────────
+function toggleEvents(header) {
+  const body    = header.nextElementSibling;
+  const chevron = header.querySelector('.events-chevron');
+  const isOpen  = !body.classList.contains('collapsed');
+  if (isOpen) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      body.style.maxHeight = '0';
+      body.classList.add('collapsed');
+      chevron.classList.remove('open');
+    });
+  } else {
+    body.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    chevron.classList.add('open');
+    setTimeout(() => { body.style.maxHeight = 'none'; }, 320);
+  }
+}
+
+// ── PDF / ADJUNTO MODAL ────────────────────────────────
+let _currentAttach = null;
+
+function openAttachment(attachObj) {
+  _currentAttach = attachObj;
+  const name = attachObj.filename || attachObj.name || 'archivo';
+  const url  = attachObj.url || attachObj.s3_url || attachObj.download_url || null;
+  const ext  = name.split('.').pop().toUpperCase();
+
+  document.getElementById('pdf-modal-title').textContent = name;
+  document.getElementById('pdf-modal').classList.add('open');
+
+  const body = document.getElementById('pdf-modal-body');
+
+  if (url && ext === 'PDF') {
+    body.innerHTML = `<iframe src="${url}#toolbar=1&navpanes=0" style="width:100%;height:100%;border:none;"></iframe>`;
+  } else if (url && ['PNG','JPG','JPEG','GIF','WEBP'].includes(ext)) {
+    body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#222;">
+      <img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+    </div>`;
+  } else {
+    body.innerHTML = `<div class="pdf-nopreview">
+      <div class="pnp-icon">📄</div>
+      <p><strong>${name}</strong></p>
+      <p style="color:var(--text3);font-size:12px">Vista previa no disponible — el archivo no tiene URL de acceso directo almacenada.</p>
+      <p style="color:var(--text3);font-size:12px">Puedes almacenar la URL en el campo <code>attachments[].url</code> del JSONB.</p>
+    </div>`;
+  }
+}
+
+function closePdfModal(event) {
+  if (event && event.target !== document.getElementById('pdf-modal')) return;
+  document.getElementById('pdf-modal').classList.remove('open');
+  document.getElementById('pdf-modal-body').innerHTML = '';
+  _currentAttach = null;
+}
+
+function downloadAttachment(attachObj) {
+  const a = attachObj || _currentAttach;
+  if (!a) return;
+  const url  = a.url || a.s3_url || a.download_url;
+  const name = a.filename || a.name || 'archivo';
+  if (!url) { alert('No hay URL de descarga disponible para este archivo.'); return; }
+  const link = document.createElement('a');
+  link.href = url; link.download = name; link.target = '_blank';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ── BOOT ──────────────────────────────────────────────
+window.onload = async () => {
+  if (token) {
+    try {
+      const me = await apiFetch('/auth/me');
+      document.getElementById('sf-name').textContent = me.full_name || me.username;
+      document.getElementById('sf-avatar').textContent = (me.full_name || me.username)[0].toUpperCase();
+      showApp();
+    } catch { token = ''; localStorage.removeItem('ses_token'); }
+  }
+};
+</script>
+</body>
+</html>
