@@ -426,6 +426,27 @@
   .error-msg { text-align: center; padding: 32px; color: var(--red); font-size: 13px; }
 
   .topbar-count { font-size: 11px; color: var(--text3); font-family: var(--mono); background: var(--surface2); border-radius: 10px; padding: 2px 8px; }
+
+  /* ── REFRESH ── */
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 6px; width: 30px; height: 30px;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center;
+    justify-content: center; transition: all .15s; flex-shrink: 0;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .refresh-btn.spinning #refresh-icon { display: inline-block; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .refresh-toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 500;
+    background: var(--surface); border: 1px solid var(--green);
+    color: var(--green); border-radius: 8px; padding: 10px 16px;
+    font-size: 13px; font-weight: 500; opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+  }
+  .refresh-toast.show { opacity: 1; transform: translateY(0); }
 </style>
 </head>
 <body>
@@ -523,6 +544,9 @@
       <!-- TOPBAR -->
       <div class="topbar">
         <span class="topbar-title">Correos enviados</span>
+        <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()" title="Actualizar lista">
+          <span id="refresh-icon">↻</span>
+        </button>
         <div class="search-wrap">
           <span class="si">🔍</span>
           <input type="text" id="q-search" placeholder="Buscar por destinatario o asunto…" oninput="debounceSearch()" />
@@ -580,6 +604,9 @@
     </div>
   </div>
 </div>
+
+<!-- REFRESH TOAST -->
+<div class="refresh-toast" id="refresh-toast">✓ Lista actualizada</div>
 
 <!-- PDF MODAL -->
 <div class="pdf-modal-overlay" id="pdf-modal" onclick="closePdfModal(event)">
@@ -971,6 +998,25 @@ function statusBadge(s) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
+// ── REFRESH ───────────────────────────────────────────
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  try {
+    await Promise.all([loadStats(), loadEmails(currentPage)]);
+    showRefreshIndicator();
+  } catch {}
+  setTimeout(() => btn.classList.remove('spinning'), 600);
+}
+
+function showRefreshIndicator() {
+  const toast = document.getElementById('refresh-toast');
+  const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+  toast.textContent = `✓ Actualizado a las ${now}`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
 // ── EVENTOS TOGGLE ────────────────────────────────────
 function toggleEvents(header) {
   const body    = header.nextElementSibling;
@@ -1044,13 +1090,33 @@ function downloadAttachment(attachObj) {
 // ── BOOT ──────────────────────────────────────────────
 window.onload = async () => {
   if (token) {
+    // Ocultar login inmediatamente para evitar flash blanco
+    document.getElementById('login-screen').style.display = 'none';
     try {
       const me = await apiFetch('/auth/me');
       document.getElementById('sf-name').textContent = me.full_name || me.username;
       document.getElementById('sf-avatar').textContent = (me.full_name || me.username)[0].toUpperCase();
       showApp();
-    } catch { token = ''; localStorage.removeItem('ses_token'); }
+    } catch {
+      // Token expirado — mostrar login de nuevo
+      token = '';
+      localStorage.removeItem('ses_token');
+      document.getElementById('login-screen').style.display = 'flex';
+    }
   }
+
+  // ── AUTO-REFRESH cada 60 segundos ──────────────────
+  setInterval(async () => {
+    if (!token) return;
+    // Solo refresca si no hay búsqueda activa ni filtros aplicados
+    const search = document.getElementById('q-search')?.value?.trim();
+    const status = document.getElementById('q-status')?.value;
+    if (search) return; // no interrumpir búsqueda activa
+    try {
+      await Promise.all([loadStats(), loadEmails(currentPage)]);
+      showRefreshIndicator();
+    } catch {}
+  }, 60000);
 };
 </script>
 </body>
