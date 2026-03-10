@@ -213,9 +213,9 @@ a           { color: inherit; text-decoration: none; }
 .an-sidebar.collapsed .asb-section-label,
 .an-sidebar.collapsed .asb-item-label,
 .an-sidebar.collapsed .asb-footer-info { display:none !important; }
-.an-sidebar.collapsed .asb-brand        { justify-content:center; padding:0; }
+.an-sidebar.collapsed .asb-brand        { justify-content:center; padding:0 8px; gap:6px; }
 .an-sidebar.collapsed .asb-logo         { margin:0 auto; }
-.an-sidebar.collapsed .asb-collapse     { display:none; }
+.an-sidebar.collapsed .asb-collapse     { margin:0 auto; width:26px; height:26px; } /* keep visible */
 .an-sidebar.collapsed .asb-item         { justify-content:center; padding:8px 6px; }
 .an-sidebar.collapsed .asb-item-dot     { margin:0; }
 .an-sidebar.collapsed .asb-footer       { justify-content:center; padding:8px 6px; flex-wrap:wrap; gap:5px; }
@@ -236,10 +236,10 @@ a           { color: inherit; text-decoration: none; }
   height:48px; flex-shrink:0;
   background:var(--surface); border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:8px; padding:0 16px;
-  overflow-x:auto;
+  overflow:visible;        /* must be visible so dropdown escapes */
+  position:relative; z-index:20;
 }
 /* Ocultar scrollbar horizontal en topbar */
-.an-topbar::-webkit-scrollbar { height:0; }
 
 .an-topbar-divider { width:1px; height:18px; background:var(--border); flex-shrink:0; }
 .an-topbar-section { font-family:var(--font-display); font-size:13px; font-weight:700; white-space:nowrap; }
@@ -400,7 +400,7 @@ a           { color: inherit; text-decoration: none; }
 .chart-row.r-2   { grid-template-columns:1fr 1fr; }
 .chart-row.r-3-1 { grid-template-columns:2fr 1fr; }
 
-.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; overflow:hidden; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; overflow:visible; position:relative; }
 .chart-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; }
 .chart-card-title  { font-family:var(--font-display); font-size:13px; font-weight:700; letter-spacing:-.01em; color:var(--text); }
 .chart-card-sub    { font-size:11px; color:var(--text3); margin-top:2px; font-family:var(--font-mono); }
@@ -599,3 +599,80 @@ a           { color: inherit; text-decoration: none; }
   .btn-export-label { display:none; }
   .btn-export { padding:0 10px; }
 }
+
+/* ═══════════════════════════════════════════════════
+   §16  PDF REPORT BUTTON
+   ═══════════════════════════════════════════════════ */
+.btn-pdf {
+  display:flex; align-items:center; gap:6px;
+  height:30px; padding:0 13px; border-radius:var(--r-sm);
+  background:var(--surface2); border:1px solid var(--border2);
+  color:var(--text2); font-size:11px; font-weight:600;
+  font-family:var(--font-mono); cursor:pointer; transition:all var(--t);
+  white-space:nowrap; flex-shrink:0;
+}
+.btn-pdf:hover   { border-color:var(--red); color:var(--red); background:var(--red-dim); }
+.btn-pdf.loading { opacity:.6; pointer-events:none; }
+.btn-pdf .pdf-icon { font-size:13px; }
+
+/* PDF progress overlay */
+.pdf-progress-overlay {
+  display:none; position:fixed; inset:0; z-index:600;
+  background:rgba(0,0,0,.65); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center;
+}
+.pdf-progress-overlay.show { display:flex; }
+.pdf-progress-box {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r-lg); padding:28px 36px;
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6); min-width:280px;
+}
+.pdf-progress-title { font-family:var(--font-display); font-size:15px; font-weight:700; }
+.pdf-progress-sub   { font-size:11px; color:var(--text3); font-family:var(--font-mono); }
+.pdf-progress-bar-track {
+  width:100%; height:4px; background:var(--surface3); border-radius:2px; overflow:hidden;
+}
+.pdf-progress-bar-fill {
+  height:100%; background:var(--accent); border-radius:2px;
+  width:0%; transition:width .4s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   §17  CHART INTERACTION ENHANCEMENTS
+   ═══════════════════════════════════════════════════ */
+/* Cursor pointer over canvas (Chart.js handles click internally) */
+.chart-canvas-wrap canvas  { cursor:crosshair; }
+.donut-canvas-wrap canvas  { cursor:pointer; }
+
+/* Zoom hint badge shown on trend chart */
+.chart-zoom-hint {
+  position:absolute; top:6px; right:8px;
+  font-size:9px; font-family:var(--font-mono); color:var(--text3);
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:4px; padding:2px 6px; pointer-events:none;
+  opacity:1; transition:opacity .3s;
+}
+.chart-zoom-hint.hidden { opacity:0; }
+
+/* Highlighted KPI card (when a donut segment is clicked) */
+.kpi-card.chart-highlight {
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 2px var(--accent-dim);
+  transform:translateY(-2px);
+}
+
+/* Sidebar collapsed expand button — always visible strip */
+.sb-expand-strip {
+  display:none; /* shown via JS when collapsed */
+  position:absolute; right:-1px; top:50%; transform:translateY(-50%);
+  width:16px; height:48px;
+  background:var(--surface); border:1px solid var(--border);
+  border-left:none; border-radius:0 6px 6px 0;
+  align-items:center; justify-content:center;
+  cursor:pointer; z-index:11; color:var(--text3); font-size:11px;
+  transition:all var(--t);
+}
+.sb-expand-strip:hover { color:var(--accent); background:var(--accent-dim); }
+.an-sidebar.collapsed .sb-expand-strip { display:flex; }
+.an-sidebar:not(.collapsed) .sb-expand-strip { display:none; }

@@ -12,7 +12,7 @@
 const ChartsModule = (() => {
 
     /* ══════════════════════════════════════════════
-    ESTADO INTERNO
+       ESTADO INTERNO
     ══════════════════════════════════════════════ */
     const _s = {
         period: 30,
@@ -28,7 +28,7 @@ const ChartsModule = (() => {
     };
 
     /* ══════════════════════════════════════════════
-    DATOS DE DEMO (fallback cuando no hay API)
+       DATOS DE DEMO (fallback cuando no hay API)
     ══════════════════════════════════════════════ */
     const DEMO_DATA = (() => {
         const stats = {
@@ -58,7 +58,7 @@ const ChartsModule = (() => {
     })();
 
     /* ══════════════════════════════════════════════
-    INIT
+       INIT
     ══════════════════════════════════════════════ */
     function init() {
         _s.theme = localStorage.getItem('mt_theme') || 'dark';
@@ -69,7 +69,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    SIDEBAR — construido por JS para evitar duplicar HTML
+       SIDEBAR — construido por JS para evitar duplicar HTML
     ══════════════════════════════════════════════ */
     function _buildSidebar() {
         const sb = document.getElementById('an-sidebar');
@@ -78,75 +78,83 @@ const ChartsModule = (() => {
         const initials = name.charAt(0).toUpperCase();
 
         sb.innerHTML = `
-    <!-- Brand + collapse -->
-    <div class="asb-brand">
+      <!-- Expand strip (visible when collapsed) -->
+      <div class="sb-expand-strip" id="btn-sidebar-expand" title="Expandir menú">›</div>
+
+      <!-- Brand + collapse -->
+      <div class="asb-brand">
         <div class="asb-logo">✦</div>
         <span class="asb-name">Mail<em>Track</em></span>
         <button class="asb-collapse" id="btn-sidebar-collapse" title="Colapsar">‹</button>
-    </div>
+      </div>
 
-    <!-- Navegación -->
-    <nav class="asb-nav" aria-label="Navegación">
+      <!-- Navegación -->
+      <nav class="asb-nav" aria-label="Navegación">
 
-    <span class="asb-section-label">Vistas</span>
+        <span class="asb-section-label">Vistas</span>
 
-    <a href="index.html" class="asb-item" title="Bandeja de envíos">
-        <span class="asb-item-dot" style="background:var(--blue)"></span>
-        <span class="asb-item-label">Bandeja de envíos</span>
-    </a>
-    <a href="analytics.html" class="asb-item active" title="Analítica">
-        <span class="asb-item-dot" style="background:var(--accent)"></span>
-        <span class="asb-item-label">Analítica</span>
-    </a>
+        <a href="index.html" class="asb-item" title="Bandeja de envíos">
+          <span class="asb-item-dot" style="background:var(--blue)"></span>
+          <span class="asb-item-label">Bandeja de envíos</span>
+        </a>
+        <a href="analytics.html" class="asb-item active" title="Analítica">
+          <span class="asb-item-dot" style="background:var(--accent)"></span>
+          <span class="asb-item-label">Analítica</span>
+        </a>
 
-    <span class="asb-section-label" style="margin-top:8px">Período</span>
+        <span class="asb-section-label" style="margin-top:8px">Período</span>
 
-    <div id="sidebar-period-pills" style="display:flex;flex-direction:column;gap:2px">
-        <button class="asb-item sb-period" data-days="7"  title="Últimos 7 días">
-        <span class="asb-item-dot" style="background:var(--text3)"></span>
-        <span class="asb-item-label">Últimos 7 días</span>
+        <div id="sidebar-period-pills" style="display:flex;flex-direction:column;gap:2px">
+          <button class="asb-item sb-period" data-days="7"  title="Últimos 7 días">
+            <span class="asb-item-dot" style="background:var(--text3)"></span>
+            <span class="asb-item-label">Últimos 7 días</span>
+          </button>
+          <button class="asb-item sb-period" data-days="30" title="Últimos 30 días">
+            <span class="asb-item-dot" style="background:var(--accent)"></span>
+            <span class="asb-item-label">Últimos 30 días</span>
+          </button>
+          <button class="asb-item sb-period" data-days="90" title="Últimos 90 días">
+            <span class="asb-item-dot" style="background:var(--text3)"></span>
+            <span class="asb-item-label">Últimos 90 días</span>
+          </button>
+        </div>
+
+        <span class="asb-section-label" style="margin-top:8px">Alertas</span>
+
+        <button class="asb-item" id="btn-alert-settings" title="Configurar umbrales">
+          <span class="asb-item-dot" style="background:var(--yellow)"></span>
+          <span class="asb-item-label">Configurar umbrales</span>
         </button>
-        <button class="asb-item sb-period" data-days="30" title="Últimos 30 días">
-        <span class="asb-item-dot" style="background:var(--accent)"></span>
-        <span class="asb-item-label">Últimos 30 días</span>
-        </button>
-        <button class="asb-item sb-period" data-days="90" title="Últimos 90 días">
-        <span class="asb-item-dot" style="background:var(--text3)"></span>
-        <span class="asb-item-label">Últimos 90 días</span>
-        </button>
-    </div>
 
-    <span class="asb-section-label" style="margin-top:8px">Alertas</span>
+      </nav>
 
-    <button class="asb-item" id="btn-alert-settings" title="Configurar umbrales">
-        <span class="asb-item-dot" style="background:var(--yellow)"></span>
-        <span class="asb-item-label">Configurar umbrales</span>
-    </button>
-
-    </nav>
-
-    <!-- Footer -->
-    <div class="asb-footer">
+      <!-- Footer -->
+      <div class="asb-footer">
         <div class="asb-avatar">${initials}</div>
-            <div class="asb-footer-info">
-            <div class="asb-footer-name">${name}</div>
-            <div class="asb-footer-role">acceso interno</div>
+        <div class="asb-footer-info">
+          <div class="asb-footer-name">${name}</div>
+          <div class="asb-footer-role">acceso interno</div>
         </div>
         <button class="asb-theme-btn" id="btn-theme" title="Cambiar tema">☀</button>
-    </div>`;
+      </div>`;
     }
 
     function _restoreSidebar() {
-        if (localStorage.getItem('sb_an_collapsed') === '1') {
-            const sb = document.getElementById('an-sidebar');
-            const btn = document.getElementById('btn-sidebar-collapse');
-            sb?.classList.add('collapsed');
-            if (btn) btn.textContent = '›';
-        }
+        // Slight delay so sidebar HTML is rendered first
+        setTimeout(() => {
+            if (localStorage.getItem('sb_an_collapsed') === '1') {
+                const sb = document.getElementById('an-sidebar');
+                const btn = document.getElementById('btn-sidebar-collapse');
+                const strip = document.getElementById('btn-sidebar-expand');
+                sb?.classList.add('collapsed');
+                if (btn) btn.textContent = '›';
+                if (strip) strip.style.display = 'flex';
+            }
+        }, 50);
     }
 
     /* ══════════════════════════════════════════════
-    EVENT BINDING
+       EVENT BINDING
     ══════════════════════════════════════════════ */
     function _bindControls() {
 
@@ -227,13 +235,18 @@ const ChartsModule = (() => {
         document.getElementById('btn-mobile-menu')?.addEventListener('click', _toggleMobileSidebar);
         document.getElementById('sidebar-overlay')?.addEventListener('click', _toggleMobileSidebar);
 
-        /* ── Sidebar collapse (desktop) ── */
+        /* ── Sidebar collapse/expand (desktop) ── */
         document.addEventListener('click', e => {
-            const btn = e.target.closest('#btn-sidebar-collapse');
-            if (!btn) return;
+            const isCollapse = e.target.closest('#btn-sidebar-collapse');
+            const isExpand = e.target.closest('#btn-sidebar-expand');
+            if (!isCollapse && !isExpand) return;
             const sb = document.getElementById('an-sidebar');
-            const collapsed = sb?.classList.toggle('collapsed');
-            btn.textContent = collapsed ? '›' : '‹';
+            const colBtn = document.getElementById('btn-sidebar-collapse');
+            const expStrip = document.getElementById('btn-sidebar-expand');
+            if (!sb) return;
+            const collapsed = sb.classList.toggle('collapsed');
+            if (colBtn) colBtn.textContent = collapsed ? '›' : '‹';
+            if (expStrip) expStrip.style.display = collapsed ? 'flex' : 'none';
             localStorage.setItem('sb_an_collapsed', collapsed ? '1' : '0');
         });
     }
@@ -253,7 +266,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    CARGA DE DATOS
+       CARGA DE DATOS
     ══════════════════════════════════════════════ */
     async function loadFromAPI() {
         _showSkeletons();
@@ -298,7 +311,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    CONTROLES PÚBLICOS
+       CONTROLES PÚBLICOS
     ══════════════════════════════════════════════ */
     function setPeriod(days) {
         _s.period = days;
@@ -349,7 +362,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    RENDER PRINCIPAL
+       RENDER PRINCIPAL
     ══════════════════════════════════════════════ */
     function renderAll() {
         const filtered = _applyFilters(_s.rawItems);
@@ -457,7 +470,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    RENDERERS
+       RENDERERS
     ══════════════════════════════════════════════ */
     function _renderKPIs({ total, delivered, bounce, open, delivRate, bounceRate, openRate }) {
         const c = document.getElementById('kpi-container'); if (!c) return;
@@ -474,22 +487,22 @@ const ChartsModule = (() => {
                 dType: +delivRate >= 95 ? 'good' : +delivRate >= 85 ? 'warn' : 'bad', sub: 'tasa de entrega'
             },
             {
-                label: 'Tasa apertura', icon: '👀', col: 'c-yellow',
+                label: 'Tasa apertura', icon: '👁', col: 'c-yellow',
                 val: openRate + '%', delta: fmt(open),
                 dType: +openRate >= 20 ? 'good' : 'neu', sub: 'correos abiertos'
             },
             {
-                label: 'Bounce rate', icon: '❌', col: +bounceRate >= 2 ? 'c-red' : 'c-orange',
+                label: 'Bounce rate', icon: '⚠', col: +bounceRate >= 2 ? 'c-red' : 'c-orange',
                 val: bounceRate + '%', delta: fmt(bounce),
                 dType: +bounceRate >= 5 ? 'bad' : +bounceRate >= 2 ? 'warn' : 'good', sub: 'límite seguro <2%'
             },
         ].map(({ label, icon, col, val, delta, dType, sub }) => `
-        <div class="kpi-card ${col}">
-            <div class="kc-label">${label}<span class="kc-icon">${icon}</span></div>
-            <div class="kc-val">${val}</div>
-            <div class="kc-delta ${dType}">${arrows[dType] || ''} ${delta}</div>
-            <div class="kc-sub">${sub}</div>
-        </div>`).join('');
+      <div class="kpi-card ${col}">
+        <div class="kc-label">${label}<span class="kc-icon">${icon}</span></div>
+        <div class="kc-val">${val}</div>
+        <div class="kc-delta ${dType}">${arrows[dType] || ''} ${delta}</div>
+        <div class="kc-sub">${sub}</div>
+      </div>`).join('');
     }
 
     function _baseOpts(cc) {
@@ -524,6 +537,30 @@ const ChartsModule = (() => {
 
     function _renderLineChart(id, { labels, sentArr, deliveredArr }, cc) {
         const cv = document.getElementById(id); if (!cv) return;
+        const wrap = cv.closest('.chart-canvas-wrap');
+
+        // Zoom-hint badge
+        let hint = wrap?.querySelector('.chart-zoom-hint');
+        if (!hint && wrap) {
+            hint = document.createElement('div');
+            hint.className = 'chart-zoom-hint';
+            hint.textContent = 'click para detallar';
+            wrap.style.position = 'relative';
+            wrap.appendChild(hint);
+        }
+
+        const opts = _baseOpts(cc);
+        // Enhanced click: highlight the point's day across all charts
+        opts.onClick = (_evt, elements) => {
+            if (!elements.length) return;
+            const idx = elements[0].index;
+            const label = labels[idx];
+            AlertsModule?.showToast(`📅 ${label} · ${sentArr[idx]} enviados · ${deliveredArr[idx]} entregados`, 'ok', 3500);
+            if (hint) { hint.classList.add('hidden'); setTimeout(() => hint.classList.remove('hidden'), 2500); }
+        };
+        // Hide hint after first interaction
+        opts.plugins.tooltip.afterBody = () => { if (hint) hint.classList.add('hidden'); };
+
         _s.charts[id] = new Chart(cv.getContext('2d'), {
             type: 'line', data: {
                 labels, datasets: [
@@ -536,7 +573,7 @@ const ChartsModule = (() => {
                         fill: true, tension: .4, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.green, pointHoverRadius: 5
                     },
                 ]
-            }, options: _baseOpts(cc)
+            }, options: opts
         });
     }
 
@@ -585,15 +622,29 @@ const ChartsModule = (() => {
             }
         });
 
+        // Click on a donut segment → highlight matching KPI card
+        _s.charts[id].options.onClick = (_evt, elements) => {
+            if (!elements.length) return;
+            const label = segs[elements[0].index]?.label?.toLowerCase();
+            document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('chart-highlight'));
+            const map = { entregados: 1, abiertos: 2, bounce: 3, complaint: 3 };
+            const idx = map[label];
+            if (idx !== undefined) {
+                const cards = document.querySelectorAll('.kpi-card');
+                cards[idx]?.classList.add('chart-highlight');
+                setTimeout(() => cards[idx]?.classList.remove('chart-highlight'), 2200);
+            }
+        };
+
         const leg = document.getElementById('donut-legend-list');
         if (leg) {
             const tot = segs.reduce((a, s) => a + s.value, 0) || 1;
             leg.innerHTML = segs.map(s => `
         <div class="dli">
-            <span class="dli-dot" style="background:${s.color}"></span>
-            <span class="dli-name">${s.label}</span>
-            <span class="dli-val">${Number(s.value).toLocaleString('es-CO')}</span>
-            <span class="dli-pct">${(s.value / tot * 100).toFixed(1)}%</span>
+          <span class="dli-dot" style="background:${s.color}"></span>
+          <span class="dli-name">${s.label}</span>
+          <span class="dli-val">${Number(s.value).toLocaleString('es-CO')}</span>
+          <span class="dli-pct">${(s.value / tot * 100).toFixed(1)}%</span>
         </div>`).join('');
         }
     }
@@ -630,17 +681,17 @@ const ChartsModule = (() => {
         const max = entries[0]?.[1] || 1;
         tbody.innerHTML = entries.length
             ? entries.map(([dom, cnt], i) => `
-        <tr>
+          <tr>
             <td class="t-mono" style="color:var(--text3);width:32px">${i + 1}</td>
             <td class="col-email">@${dom}</td>
             <td class="t-mono">${Number(cnt).toLocaleString('es-CO')}</td>
             <td class="t-mono" style="color:var(--text3)">${total > 0 ? (cnt / total * 100).toFixed(1) : 0}%</td>
             <td class="col-bar">
-            <div class="mini-bar-track">
+              <div class="mini-bar-track">
                 <div class="mini-bar-fill" style="width:${(cnt / max * 100).toFixed(1)}%"></div>
-            </div>
+              </div>
             </td>
-        </tr>`).join('')
+          </tr>`).join('')
             : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Sin datos para el período seleccionado</td></tr>';
     }
 
@@ -666,7 +717,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    EXPORTACIÓN
+       EXPORTACIÓN
     ══════════════════════════════════════════════ */
     function exportCSV() {
         const items = _applyFilters(_s.rawItems);
@@ -716,10 +767,11 @@ const ChartsModule = (() => {
         ];
         const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-        <Worksheet ss:Name="Analítica"><Table>
-        ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n')}
-        </Table></Worksheet></Workbook>`;
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Analítica"><Table>
+${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n')}
+</Table></Worksheet></Workbook>`;
 
         const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
         _download(blob, `mailtrack-${_dateTag()}.xls`);
@@ -742,7 +794,7 @@ const ChartsModule = (() => {
     function _dateTag() { return new Date().toISOString().slice(0, 10); }
 
     /* ══════════════════════════════════════════════
-    UTILIDADES
+       UTILIDADES
     ══════════════════════════════════════════════ */
     function _colors() {
         const l = _s.theme === 'light';
@@ -770,9 +822,24 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-    API PÚBLICA
+       API PÚBLICA
     ══════════════════════════════════════════════ */
-    return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel };
+    /* Expose read-only snapshot for reports.js */
+    function getSnapshot() {
+        const filtered = _applyFilters(_s.rawItems);
+        return {
+            period: _s.period,
+            domain: _s.domain,
+            dateFrom: _s.dateFrom,
+            dateTo: _s.dateTo,
+            stats: _s.stats,
+            kpis: _computeKPIs(filtered),
+            filtered,
+            charts: _s.charts,   // live Chart instances
+        };
+    }
+
+    return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel, getSnapshot };
 
 })();
 

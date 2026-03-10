@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Analítica — MailTrack</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
-    rel="stylesheet" />
-  <!-- Chart.js sin defer para que esté listo cuando charts.js se ejecuta -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Chart.js 4.x -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- jsPDF 2.x — requerido por reports.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
   <!-- ════════════════════════════════════════════════════
-    LAYOUT RAÍZ: sidebar fijo + columna de contenido
-    ════════════════════════════════════════════════════ -->
+       LAYOUT RAÍZ: sidebar fijo + columna de contenido
+       ════════════════════════════════════════════════════ -->
   <div class="an-page">
 
     <!-- Overlay oscuro para cerrar sidebar en móvil -->
     <div id="sidebar-overlay" class="an-sidebar-overlay"></div>
 
     <!-- ── SIDEBAR ──────────────────────────────────────
-        Relleno por charts.js → _buildSidebar()
-        Contiene: brand, nav, period pills, alert config, footer
-        ─────────────────────────────────────────────── -->
+         Relleno por charts.js → _buildSidebar()
+         Contiene: brand, nav, period pills, alert config, footer
+         ─────────────────────────────────────────────── -->
     <aside id="an-sidebar" class="an-sidebar" aria-label="Menú lateral"></aside>
 
     <!-- ── ÁREA DE CONTENIDO ────────────────────────────
-        Flex column: topbar fija + body scrollable
-        ─────────────────────────────────────────────── -->
+         Flex column: topbar fija + body scrollable
+         ─────────────────────────────────────────────── -->
     <div class="an-content-area">
 
       <!-- TOPBAR ───────────────────────────────────────
-            Controles de filtro y acciones rápidas.
-            En móvil muestra hamburguesa + título.
-            ─────────────────────────────────────────── -->
+           Controles de filtro y acciones rápidas.
+           En móvil muestra hamburguesa + título.
+           ─────────────────────────────────────────── -->
       <header class="an-topbar" role="banner">
 
         <!-- Hamburguesa visible solo en móvil -->
-        <button id="btn-mobile-menu" class="btn-icon btn-menu" aria-label="Abrir menú" title="Menú">☰</button>
+        <button id="btn-mobile-menu" class="btn-icon btn-menu"
+          aria-label="Abrir menú" title="Menú">☰</button>
 
         <div class="an-topbar-divider"></div>
         <span class="an-topbar-section">Analítica</span>
@@ -50,18 +50,20 @@
 
           <!-- Período rápido -->
           <div class="an-pill-group" role="group" aria-label="Seleccionar período">
-            <button class="an-pill active" data-days="7" aria-pressed="true">7d</button>
-            <button class="an-pill" data-days="30" aria-pressed="false">30d</button>
-            <button class="an-pill" data-days="90" aria-pressed="false">90d</button>
+            <button class="an-pill"        data-days="7"  aria-pressed="false">7d</button>
+            <button class="an-pill active" data-days="30" aria-pressed="true">30d</button>
+            <button class="an-pill"        data-days="90" aria-pressed="false">90d</button>
           </div>
 
           <div class="an-sep"></div>
 
           <!-- Rango de fechas personalizado -->
           <div class="date-range-group" role="group" aria-label="Rango de fechas">
-            <input type="date" id="date-from" class="date-input" aria-label="Fecha desde" title="Desde" />
+            <input type="date" id="date-from" class="date-input"
+              aria-label="Fecha desde" title="Desde" />
             <span class="date-range-sep" aria-hidden="true">→</span>
-            <input type="date" id="date-to" class="date-input" aria-label="Fecha hasta" title="Hasta" />
+            <input type="date" id="date-to" class="date-input"
+              aria-label="Fecha hasta" title="Hasta" />
           </div>
 
           <div class="an-sep"></div>
@@ -75,7 +77,8 @@
 
           <!-- Exportar -->
           <div class="export-wrap">
-            <button id="btn-export" class="btn-export" aria-haspopup="true" aria-expanded="false"
+            <button id="btn-export" class="btn-export"
+              aria-haspopup="true" aria-expanded="false"
               aria-label="Exportar datos">
               <span class="btn-export-label">⬇ Exportar</span>
               <span class="arrow" aria-hidden="true">▾</span>
@@ -99,42 +102,47 @@
           </div>
 
           <!-- Refrescar -->
-          <button id="btn-refresh" class="btn-icon" aria-label="Actualizar datos" title="Actualizar">
+          <button id="btn-refresh" class="btn-icon"
+            aria-label="Actualizar datos" title="Actualizar">
             <span>↻</span>
+          </button>
+
+          <div class="an-sep"></div>
+
+          <!-- PDF Report → reports.js ReportsModule.triggerDownload() -->
+          <button id="btn-pdf" class="btn-pdf"
+            aria-label="Descargar reporte PDF"
+            title="Generar y descargar reporte PDF completo"
+            onclick="ReportsModule.triggerDownload()">
+            <span class="pdf-icon">📋</span>
+            <span class="btn-export-label">PDF</span>
           </button>
 
         </div>
       </header>
 
       <!-- BODY SCROLLABLE ──────────────────────────────
-            Todas las secciones de contenido van aquí.
-            ─────────────────────────────────────────── -->
+           Todas las secciones de contenido van aquí.
+           ─────────────────────────────────────────── -->
       <main class="an-body" id="an-body" role="main">
 
         <!-- § AlertBanner
-                Renderizado por alerts.js → AlertsModule.render()
-                Se oculta por defecto con is-hidden    -->
-        <section id="alert-container" aria-label="Alertas de entregabilidad" aria-live="polite">
+             Renderizado por alerts.js → AlertsModule.render()
+             Se oculta por defecto con is-hidden    -->
+        <section id="alert-container"
+          aria-label="Alertas de entregabilidad" aria-live="polite">
           <div class="an-alert is-hidden" aria-hidden="true"></div>
         </section>
 
         <!-- § KPI Cards
-                Renderizado por charts.js → _renderKPIs()
-                Muestra skeletons durante la carga inicial -->
+             Renderizado por charts.js → _renderKPIs()
+             Muestra skeletons durante la carga inicial -->
         <section aria-label="Métricas principales">
           <div class="kpi-row" id="kpi-container">
-            <div class="kpi-card">
-              <div class="u-skeleton" style="height:80px"></div>
-            </div>
-            <div class="kpi-card">
-              <div class="u-skeleton" style="height:80px"></div>
-            </div>
-            <div class="kpi-card">
-              <div class="u-skeleton" style="height:80px"></div>
-            </div>
-            <div class="kpi-card">
-              <div class="u-skeleton" style="height:80px"></div>
-            </div>
+            <div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>
           </div>
         </section>
 
@@ -150,8 +158,7 @@
                   </div>
                 </div>
                 <div class="chart-legend">
-                  <div class="cl-item"><span class="cl-dot" style="background:#60a5fa"></span>Enviados
-                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:#60a5fa"></span>Enviados</div>
                   <div class="cl-item"><span class="cl-dot" style="background:#4ade80"></span>Entregados</div>
                 </div>
               </div>
@@ -175,8 +182,7 @@
                   </div>
                 </div>
                 <div class="chart-legend">
-                  <div class="cl-item"><span class="cl-dot" style="background:rgba(74,222,128,.8)"></span>Entregados
-                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:rgba(74,222,128,.8)"></span>Entregados</div>
                   <div class="cl-item"><span class="cl-dot" style="background:rgba(248,113,113,.8)"></span>Bounce</div>
                 </div>
               </div>
@@ -214,8 +220,7 @@
                   <div class="chart-card-sub">Open rate tracking</div>
                 </div>
                 <div class="chart-legend">
-                  <div class="cl-item"><span class="cl-dot" style="background:#fbbf24"></span>Abiertos
-                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:#fbbf24"></span>Abiertos</div>
                 </div>
               </div>
               <div class="chart-canvas-wrap" style="height:150px">
@@ -230,8 +235,7 @@
                   <div class="chart-card-sub">Evolución de problemas</div>
                 </div>
                 <div class="chart-legend">
-                  <div class="cl-item"><span class="cl-dot" style="background:#f87171"></span>Bounce
-                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:#f87171"></span>Bounce</div>
                   <div class="cl-item"><span class="cl-dot" style="background:#fb923c"></span>Complaint</div>
                 </div>
               </div>
@@ -264,9 +268,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colspan="5" class="u-loading">Cargando…</td>
-                  </tr>
+                  <tr><td colspan="5" class="u-loading">Cargando…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -285,9 +287,10 @@
     1. alerts.js   → define AlertsModule (sin dependencias)
     2. charts.js   → define ChartsModule, usa AlertsModule
     3. Inline       → solo redirige si no hay sesión
-    -->
+  -->
   <script src="js/alerts.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/reports.js"></script>
   <script>
     (function () {
       if (!localStorage.getItem('ses_token')) {
@@ -297,5 +300,4 @@
   </script>
 
 </body>
-
 </html>
