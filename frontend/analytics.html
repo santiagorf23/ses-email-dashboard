@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analítica — MailTrack SES Dashboard</title>
+
+    <!--
+    ════════════════════════════════════════════════════════
+    DEPENDENCIAS EXTERNAS
+    Migración futura → npm:
+    npm install chart.js
+    import { Chart } from 'chart.js/auto'
+    ════════════════════════════════════════════════════════
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <!-- Chart.js 4.x · Migración: npm install chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+
+    <!--
+    ESTILOS PROPIOS
+    Migración futura → Tailwind:
+    npx tailwindcss init
+    @import 'tailwindcss/base'; ...
+    -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+    <!--
+    ════════════════════════════════════════════════════════════════
+    PÁGINA DE ANALÍTICA — MailTrack SES Dashboard
+    Estructura de componentes (→ React):
+
+    <AnalyticsPage>
+        <AnalyticsTopbar />          → .an-topbar
+        <AlertBanner />              → #alert-container
+        <PeriodSelector />           → .an-pill-group
+        <DomainSelector />           → #an-domain
+        <KPIRow>                     → #kpi-container
+        <KPICard × 4 />
+        </KPIRow>
+        <TrendChart />               → #chart-trend
+        <ComparisonBarChart />       → #chart-bar
+        <DistributionDonut />        → #chart-donut
+        <AreaChart label="open" />   → #chart-opens
+        <IssuesChart />              → #chart-issues
+        <DomainsTable />             → #domains-table
+    </AnalyticsPage>
+    ════════════════════════════════════════════════════════════════
+    -->
+
+    <div class="an-page">
+
+        <!-- ══════════════════════════════════════════════
+        TOPBAR — Navegación superior
+        → React: <AnalyticsTopbar onThemeToggle onRefresh />
+        ══════════════════════════════════════════════ -->
+        <header class="an-topbar" role="banner">
+
+            <!-- Brand -->
+            <a href="index.html" class="an-brand" title="Volver al dashboard">
+                <div class="an-brand-logo" aria-hidden="true">✦</div>
+                <span class="an-brand-name">Mail<em>Track</em></span>
+            </a>
+
+            <div class="an-topbar-divider" aria-hidden="true"></div>
+            <span class="an-topbar-section">Analítica</span>
+
+            <!-- Actions (right side) -->
+            <div class="an-topbar-right">
+
+                <!-- Period selector → React: <PeriodSelector value={period} onChange={setPeriod} /> -->
+                <div class="an-pill-group" role="group" aria-label="Seleccionar período">
+                    <button class="an-pill" data-days="7" aria-pressed="false"> 7d</button>
+                    <button class="an-pill active" data-days="30" aria-pressed="true">30d</button>
+                    <button class="an-pill" data-days="90" aria-pressed="false">90d</button>
+                </div>
+
+                <div class="an-sep" aria-hidden="true"></div>
+
+                <!-- Domain selector → React: <DomainSelector options={domains} value={domain} /> -->
+                <select id="an-domain" class="an-domain-select" aria-label="Filtrar por dominio">
+                    <option value="">Todos los dominios</option>
+                    <!-- Opciones generadas dinámicamente por charts.js -->
+                </select>
+
+                <div class="an-sep" aria-hidden="true"></div>
+
+                <!-- Theme toggle → React: <ThemeToggle /> -->
+                <button id="btn-theme" class="btn-icon btn-theme" aria-label="Cambiar tema"
+                    title="Cambiar entre modo oscuro y claro">☀</button>
+
+                <!-- Refresh → React: <RefreshButton loading={isLoading} /> -->
+                <button id="btn-refresh" class="btn-icon" aria-label="Actualizar datos" title="Actualizar">
+                    <span>↻</span>
+                </button>
+
+            </div>
+        </header>
+
+        <!-- ══════════════════════════════════════════════
+        CUERPO PRINCIPAL — scrollable
+        ══════════════════════════════════════════════ -->
+        <main class="an-body" id="an-body" role="main">
+
+            <!-- ── AlertBanner ─────────────────────────────
+            → React: <AlertBanner stats={stats} />
+            Renderizado por alerts.js · AlertsModule.render()
+            ─────────────────────────────────────────── -->
+            <section id="alert-container" aria-label="Alertas de entregabilidad" aria-live="polite">
+                <!-- Placeholder mientras carga -->
+                <div class="an-alert is-hidden" aria-hidden="true"></div>
+            </section>
+
+            <!-- ── KPI Cards ────────────────────────────────
+            → React: <KPIRow> + <KPICard × 4 />
+            Renderizado por charts.js · _renderKPIRow()
+            ─────────────────────────────────────────── -->
+            <section aria-label="Métricas principales">
+                <div class="kpi-row" id="kpi-container">
+                    <!-- Skeletons visibles durante la carga inicial -->
+                    <div class="kpi-card">
+                        <div class="u-skeleton" style="height:80px"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="u-skeleton" style="height:80px"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="u-skeleton" style="height:80px"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="u-skeleton" style="height:80px"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Trend Chart (línea) ──────────────────────
+            → React: <TrendChart labels={labels} sent={sent} delivered={delivered} />
+            ─────────────────────────────────────────── -->
+            <section aria-label="Tendencia de envíos">
+                <div class="chart-row r-1">
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Tendencia de envíos</div>
+                                <div class="chart-card-sub">
+                                    Enviados vs entregados · <span data-period-label>últimos 30 días</span>
+                                </div>
+                            </div>
+                            <div class="chart-legend" aria-hidden="true">
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:#60a5fa"></span>Enviados
+                                </div>
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:#4ade80"></span>Entregados
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrap" style="height:200px">
+                            <canvas id="chart-trend" role="img" aria-label="Gráfico de tendencia de envíos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Bar Chart + Donut (fila 2:1) ─────────────
+            → React: <ComparisonRow> { <BarChart /> <DonutChart /> }
+            ─────────────────────────────────────────── -->
+            <section aria-label="Comparación de envíos y distribución">
+                <div class="chart-row r-3-1">
+
+                    <!-- Envíos vs Bounce (barras agrupadas) -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Envíos vs Rebotes</div>
+                                <div class="chart-card-sub">
+                                    Comparación diaria · <span data-period-label>últimos 30 días</span>
+                                </div>
+                            </div>
+                            <div class="chart-legend" aria-hidden="true">
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:rgba(74,222,128,.8)"></span>Entregados
+                                </div>
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:rgba(248,113,113,.8)"></span>Bounce
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrap" style="height:180px">
+                            <canvas id="chart-bar" role="img"
+                                aria-label="Gráfico de barras: envíos vs rebotes"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Distribución por estado (donut) -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Distribución</div>
+                                <div class="chart-card-sub">Por estado de correo</div>
+                            </div>
+                        </div>
+                        <div class="donut-container" style="height:180px">
+                            <div class="donut-canvas-wrap" style="width:130px;height:130px">
+                                <canvas id="chart-donut" width="130" height="130" role="img"
+                                    aria-label="Gráfico de dona: distribución por estado"></canvas>
+                            </div>
+                            <!-- Leyenda del donut → React: <DonutLegend segments={segments} /> -->
+                            <div class="donut-legend-list" id="donut-legend-list" aria-label="Leyenda del gráfico">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── Area Charts (fila 1:1) ───────────────────
+            → React: <MetricsRow> { <OpenChart /> <IssuesChart /> }
+            ─────────────────────────────────────────── -->
+            <section aria-label="Aperturas y problemas de entrega">
+                <div class="chart-row r-2">
+
+                    <!-- Aperturas por día -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Aperturas por día</div>
+                                <div class="chart-card-sub">Open rate tracking</div>
+                            </div>
+                            <div class="chart-legend" aria-hidden="true">
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:#fbbf24"></span>Abiertos
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrap" style="height:150px">
+                            <canvas id="chart-opens" role="img" aria-label="Gráfico de aperturas por día"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Bounce + Complaints por día -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Bounce &amp; Complaints</div>
+                                <div class="chart-card-sub">Evolución de problemas</div>
+                            </div>
+                            <div class="chart-legend" aria-hidden="true">
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:#f87171"></span>Bounce
+                                </div>
+                                <div class="cl-item">
+                                    <span class="cl-dot" style="background:#fb923c"></span>Complaint
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-wrap" style="height:150px">
+                            <canvas id="chart-issues" role="img" aria-label="Gráfico de bounce y complaints"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── Top Domains Table ────────────────────────
+            → React: <DomainsTable rows={topDomains} />
+            Renderizada por charts.js · _renderDomainsTable()
+            ─────────────────────────────────────────── -->
+            <section aria-label="Top dominios destinatarios">
+                <div class="chart-row r-1">
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <div class="chart-card-title">Top dominios destinatarios</div>
+                                <div class="chart-card-sub">Volumen de envíos por dominio de destino</div>
+                            </div>
+                        </div>
+                        <table id="domains-table" class="an-table" aria-label="Tabla de dominios destinatarios">
+                            <!-- Renderizada dinámicamente por charts.js -->
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Dominio</th>
+                                    <th>Envíos</th>
+                                    <th>%</th>
+                                    <th class="col-bar">Volumen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="u-loading">Cargando…</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main><!-- /an-body -->
+
+    </div><!-- /an-page -->
+
+    <!-- Toast notification → React: <Toast /> portal -->
+    <div id="an-toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!--
+    ════════════════════════════════════════════════════════
+    SCRIPTS PROPIOS — cargar después del DOM
+    Orden obligatorio: alerts.js primero (AlertsModule),
+    luego charts.js (usa AlertsModule internamente).
+    ════════════════════════════════════════════════════════
+    -->
+    <script src="js/alerts.js"></script>
+    <script src="js/charts.js"></script>
+    <script>
+        // Pasar token de sesión desde index.html (guardado en localStorage)
+        // Al inicializar, charts.js lo leerá automáticamente con localStorage.getItem('ses_token')
+        // Si no hay sesión activa, redirigir al login
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('ses_token');
+            if (!token) {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
