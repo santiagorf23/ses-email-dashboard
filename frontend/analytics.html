@@ -2,303 +2,299 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analítica — MailTrack</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
-    <!-- Chart.js sin defer para que esté listo cuando charts.js se ejecuta -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analítica — MailTrack</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <!-- Chart.js sin defer para que esté listo cuando charts.js se ejecuta -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
-    <!-- ════════════════════════════════════════════════════
-       LAYOUT RAÍZ: sidebar fijo + columna de contenido
-       ════════════════════════════════════════════════════ -->
-    <div class="an-page">
+  <!-- ════════════════════════════════════════════════════
+    LAYOUT RAÍZ: sidebar fijo + columna de contenido
+    ════════════════════════════════════════════════════ -->
+  <div class="an-page">
 
-        <!-- Overlay oscuro para cerrar sidebar en móvil -->
-        <div id="sidebar-overlay" class="an-sidebar-overlay"></div>
+    <!-- Overlay oscuro para cerrar sidebar en móvil -->
+    <div id="sidebar-overlay" class="an-sidebar-overlay"></div>
 
-        <!-- ── SIDEBAR ──────────────────────────────────────
-         Relleno por charts.js → _buildSidebar()
-         Contiene: brand, nav, period pills, alert config, footer
-         ─────────────────────────────────────────────── -->
-        <aside id="an-sidebar" class="an-sidebar" aria-label="Menú lateral"></aside>
+    <!-- ── SIDEBAR ──────────────────────────────────────
+        Relleno por charts.js → _buildSidebar()
+        Contiene: brand, nav, period pills, alert config, footer
+        ─────────────────────────────────────────────── -->
+    <aside id="an-sidebar" class="an-sidebar" aria-label="Menú lateral"></aside>
 
-        <!-- ── ÁREA DE CONTENIDO ────────────────────────────
-         Flex column: topbar fija + body scrollable
-         ─────────────────────────────────────────────── -->
-        <div class="an-content-area">
+    <!-- ── ÁREA DE CONTENIDO ────────────────────────────
+        Flex column: topbar fija + body scrollable
+        ─────────────────────────────────────────────── -->
+    <div class="an-content-area">
 
-            <!-- TOPBAR ───────────────────────────────────────
-           Controles de filtro y acciones rápidas.
-           En móvil muestra hamburguesa + título.
-           ─────────────────────────────────────────── -->
-            <header class="an-topbar" role="banner">
+      <!-- TOPBAR ───────────────────────────────────────
+            Controles de filtro y acciones rápidas.
+            En móvil muestra hamburguesa + título.
+            ─────────────────────────────────────────── -->
+      <header class="an-topbar" role="banner">
 
-                <!-- Hamburguesa visible solo en móvil -->
-                <button id="btn-mobile-menu" class="btn-icon btn-menu" aria-label="Abrir menú" title="Menú">☰</button>
+        <!-- Hamburguesa visible solo en móvil -->
+        <button id="btn-mobile-menu" class="btn-icon btn-menu" aria-label="Abrir menú" title="Menú">☰</button>
 
-                <div class="an-topbar-divider"></div>
-                <span class="an-topbar-section">Analítica</span>
+        <div class="an-topbar-divider"></div>
+        <span class="an-topbar-section">Analítica</span>
 
-                <div class="an-topbar-right">
+        <div class="an-topbar-right">
 
-                    <!-- Período rápido -->
-                    <div class="an-pill-group" role="group" aria-label="Seleccionar período">
-                        <button class="an-pill" data-days="7" aria-pressed="false">7d</button>
-                        <button class="an-pill active" data-days="30" aria-pressed="true">30d</button>
-                        <button class="an-pill" data-days="90" aria-pressed="false">90d</button>
-                    </div>
+          <!-- Período rápido -->
+          <div class="an-pill-group" role="group" aria-label="Seleccionar período">
+            <button class="an-pill active" data-days="7" aria-pressed="true">7d</button>
+            <button class="an-pill" data-days="30" aria-pressed="false">30d</button>
+            <button class="an-pill" data-days="90" aria-pressed="false">90d</button>
+          </div>
 
-                    <div class="an-sep"></div>
+          <div class="an-sep"></div>
 
-                    <!-- Rango de fechas personalizado -->
-                    <div class="date-range-group" role="group" aria-label="Rango de fechas">
-                        <input type="date" id="date-from" class="date-input" aria-label="Fecha desde" title="Desde" />
-                        <span class="date-range-sep" aria-hidden="true">→</span>
-                        <input type="date" id="date-to" class="date-input" aria-label="Fecha hasta" title="Hasta" />
-                    </div>
+          <!-- Rango de fechas personalizado -->
+          <div class="date-range-group" role="group" aria-label="Rango de fechas">
+            <input type="date" id="date-from" class="date-input" aria-label="Fecha desde" title="Desde" />
+            <span class="date-range-sep" aria-hidden="true">→</span>
+            <input type="date" id="date-to" class="date-input" aria-label="Fecha hasta" title="Hasta" />
+          </div>
 
-                    <div class="an-sep"></div>
+          <div class="an-sep"></div>
 
-                    <!-- Selector de dominio -->
-                    <select id="an-domain" class="an-domain-select" aria-label="Filtrar por dominio">
-                        <option value="">Todos los dominios</option>
-                    </select>
+          <!-- Selector de dominio -->
+          <select id="an-domain" class="an-domain-select" aria-label="Filtrar por dominio">
+            <option value="">Todos los dominios</option>
+          </select>
 
-                    <div class="an-sep"></div>
+          <div class="an-sep"></div>
 
-                    <!-- Exportar -->
-                    <div class="export-wrap">
-                        <button id="btn-export" class="btn-export" aria-haspopup="true" aria-expanded="false"
-                            aria-label="Exportar datos">
-                            <span class="btn-export-label">⬇ Exportar</span>
-                            <span class="arrow" aria-hidden="true">▾</span>
-                        </button>
-                        <div id="export-dropdown" class="export-dropdown" role="menu">
-                            <div id="export-csv" class="export-option" role="menuitem" tabindex="0">
-                                <span class="export-option-icon" aria-hidden="true">📄</span>
-                                <div>
-                                    <div>Exportar CSV</div>
-                                    <div class="export-option-sub">Detalle de correos del período</div>
-                                </div>
-                            </div>
-                            <div id="export-excel" class="export-option" role="menuitem" tabindex="0">
-                                <span class="export-option-icon" aria-hidden="true">📊</span>
-                                <div>
-                                    <div>Exportar Excel</div>
-                                    <div class="export-option-sub">Incluye resumen de métricas</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Refrescar -->
-                    <button id="btn-refresh" class="btn-icon" aria-label="Actualizar datos" title="Actualizar">
-                        <span>↻</span>
-                    </button>
-
+          <!-- Exportar -->
+          <div class="export-wrap">
+            <button id="btn-export" class="btn-export" aria-haspopup="true" aria-expanded="false"
+              aria-label="Exportar datos">
+              <span class="btn-export-label">⬇ Exportar</span>
+              <span class="arrow" aria-hidden="true">▾</span>
+            </button>
+            <div id="export-dropdown" class="export-dropdown" role="menu">
+              <div id="export-csv" class="export-option" role="menuitem" tabindex="0">
+                <span class="export-option-icon" aria-hidden="true">📄</span>
+                <div>
+                  <div>Exportar CSV</div>
+                  <div class="export-option-sub">Detalle de correos del período</div>
                 </div>
-            </header>
+              </div>
+              <div id="export-excel" class="export-option" role="menuitem" tabindex="0">
+                <span class="export-option-icon" aria-hidden="true">📊</span>
+                <div>
+                  <div>Exportar Excel</div>
+                  <div class="export-option-sub">Incluye resumen de métricas</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <!-- BODY SCROLLABLE ──────────────────────────────
-           Todas las secciones de contenido van aquí.
-           ─────────────────────────────────────────── -->
-            <main class="an-body" id="an-body" role="main">
+          <!-- Refrescar -->
+          <button id="btn-refresh" class="btn-icon" aria-label="Actualizar datos" title="Actualizar">
+            <span>↻</span>
+          </button>
 
-                <!-- § AlertBanner
-             Renderizado por alerts.js → AlertsModule.render()
-             Se oculta por defecto con is-hidden    -->
-                <section id="alert-container" aria-label="Alertas de entregabilidad" aria-live="polite">
-                    <div class="an-alert is-hidden" aria-hidden="true"></div>
-                </section>
+        </div>
+      </header>
 
-                <!-- § KPI Cards
-             Renderizado por charts.js → _renderKPIs()
-             Muestra skeletons durante la carga inicial -->
-                <section aria-label="Métricas principales">
-                    <div class="kpi-row" id="kpi-container">
-                        <div class="kpi-card">
-                            <div class="u-skeleton" style="height:80px"></div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="u-skeleton" style="height:80px"></div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="u-skeleton" style="height:80px"></div>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="u-skeleton" style="height:80px"></div>
-                        </div>
-                    </div>
-                </section>
+      <!-- BODY SCROLLABLE ──────────────────────────────
+            Todas las secciones de contenido van aquí.
+            ─────────────────────────────────────────── -->
+      <main class="an-body" id="an-body" role="main">
 
-                <!-- § Tendencia (línea) -->
-                <section aria-label="Tendencia de envíos">
-                    <div class="chart-row r-1">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Tendencia de envíos</div>
-                                    <div class="chart-card-sub">
-                                        Enviados vs entregados · <span data-period-label>últimos 30 días</span>
-                                    </div>
-                                </div>
-                                <div class="chart-legend">
-                                    <div class="cl-item"><span class="cl-dot" style="background:#60a5fa"></span>Enviados
-                                    </div>
-                                    <div class="cl-item"><span class="cl-dot"
-                                            style="background:#4ade80"></span>Entregados</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrap" style="height:200px">
-                                <canvas id="chart-trend" aria-label="Gráfico de tendencia"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+        <!-- § AlertBanner
+                Renderizado por alerts.js → AlertsModule.render()
+                Se oculta por defecto con is-hidden    -->
+        <section id="alert-container" aria-label="Alertas de entregabilidad" aria-live="polite">
+          <div class="an-alert is-hidden" aria-hidden="true"></div>
+        </section>
 
-                <!-- § Barras + Donut (2:1) -->
-                <section aria-label="Comparación y distribución">
-                    <div class="chart-row r-3-1">
+        <!-- § KPI Cards
+                Renderizado por charts.js → _renderKPIs()
+                Muestra skeletons durante la carga inicial -->
+        <section aria-label="Métricas principales">
+          <div class="kpi-row" id="kpi-container">
+            <div class="kpi-card">
+              <div class="u-skeleton" style="height:80px"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="u-skeleton" style="height:80px"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="u-skeleton" style="height:80px"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="u-skeleton" style="height:80px"></div>
+            </div>
+          </div>
+        </section>
 
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Envíos vs Rebotes</div>
-                                    <div class="chart-card-sub">
-                                        Comparación diaria · <span data-period-label>últimos 30 días</span>
-                                    </div>
-                                </div>
-                                <div class="chart-legend">
-                                    <div class="cl-item"><span class="cl-dot"
-                                            style="background:rgba(74,222,128,.8)"></span>Entregados</div>
-                                    <div class="cl-item"><span class="cl-dot"
-                                            style="background:rgba(248,113,113,.8)"></span>Bounce</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrap" style="height:180px">
-                                <canvas id="chart-bar" aria-label="Barras: envíos vs rebotes"></canvas>
-                            </div>
-                        </div>
+        <!-- § Tendencia (línea) -->
+        <section aria-label="Tendencia de envíos">
+          <div class="chart-row r-1">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Tendencia de envíos</div>
+                  <div class="chart-card-sub">
+                    Enviados vs entregados · <span data-period-label>últimos 30 días</span>
+                  </div>
+                </div>
+                <div class="chart-legend">
+                  <div class="cl-item"><span class="cl-dot" style="background:#60a5fa"></span>Enviados
+                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:#4ade80"></span>Entregados</div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap" style="height:200px">
+                <canvas id="chart-trend" aria-label="Gráfico de tendencia"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Distribución</div>
-                                    <div class="chart-card-sub">Por estado de correo</div>
-                                </div>
-                            </div>
-                            <div class="donut-container" style="height:180px">
-                                <div class="donut-canvas-wrap" style="width:130px;height:130px">
-                                    <canvas id="chart-donut" width="130" height="130"
-                                        aria-label="Donut de distribución"></canvas>
-                                </div>
-                                <div class="donut-legend-list" id="donut-legend-list" aria-label="Leyenda"></div>
-                            </div>
-                        </div>
+        <!-- § Barras + Donut (2:1) -->
+        <section aria-label="Comparación y distribución">
+          <div class="chart-row r-3-1">
 
-                    </div>
-                </section>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Envíos vs Rebotes</div>
+                  <div class="chart-card-sub">
+                    Comparación diaria · <span data-period-label>últimos 30 días</span>
+                  </div>
+                </div>
+                <div class="chart-legend">
+                  <div class="cl-item"><span class="cl-dot" style="background:rgba(74,222,128,.8)"></span>Entregados
+                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:rgba(248,113,113,.8)"></span>Bounce</div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap" style="height:180px">
+                <canvas id="chart-bar" aria-label="Barras: envíos vs rebotes"></canvas>
+              </div>
+            </div>
 
-                <!-- § Aperturas + Issues (1:1) -->
-                <section aria-label="Aperturas y problemas">
-                    <div class="chart-row r-2">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Distribución</div>
+                  <div class="chart-card-sub">Por estado de correo</div>
+                </div>
+              </div>
+              <div class="donut-container" style="height:180px">
+                <div class="donut-canvas-wrap" style="width:130px;height:130px">
+                  <canvas id="chart-donut" width="130" height="130" aria-label="Donut de distribución"></canvas>
+                </div>
+                <div class="donut-legend-list" id="donut-legend-list" aria-label="Leyenda"></div>
+              </div>
+            </div>
 
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Aperturas por día</div>
-                                    <div class="chart-card-sub">Open rate tracking</div>
-                                </div>
-                                <div class="chart-legend">
-                                    <div class="cl-item"><span class="cl-dot" style="background:#fbbf24"></span>Abiertos
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrap" style="height:150px">
-                                <canvas id="chart-opens" aria-label="Aperturas por día"></canvas>
-                            </div>
-                        </div>
+          </div>
+        </section>
 
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Bounce &amp; Complaints</div>
-                                    <div class="chart-card-sub">Evolución de problemas</div>
-                                </div>
-                                <div class="chart-legend">
-                                    <div class="cl-item"><span class="cl-dot" style="background:#f87171"></span>Bounce
-                                    </div>
-                                    <div class="cl-item"><span class="cl-dot"
-                                            style="background:#fb923c"></span>Complaint</div>
-                                </div>
-                            </div>
-                            <div class="chart-canvas-wrap" style="height:150px">
-                                <canvas id="chart-issues" aria-label="Bounce y complaints"></canvas>
-                            </div>
-                        </div>
+        <!-- § Aperturas + Issues (1:1) -->
+        <section aria-label="Aperturas y problemas">
+          <div class="chart-row r-2">
 
-                    </div>
-                </section>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Aperturas por día</div>
+                  <div class="chart-card-sub">Open rate tracking</div>
+                </div>
+                <div class="chart-legend">
+                  <div class="cl-item"><span class="cl-dot" style="background:#fbbf24"></span>Abiertos
+                  </div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap" style="height:150px">
+                <canvas id="chart-opens" aria-label="Aperturas por día"></canvas>
+              </div>
+            </div>
 
-                <!-- § Tabla de dominios -->
-                <section aria-label="Top dominios destinatarios">
-                    <div class="chart-row r-1">
-                        <div class="chart-card">
-                            <div class="chart-card-header">
-                                <div>
-                                    <div class="chart-card-title">Top dominios destinatarios</div>
-                                    <div class="chart-card-sub">Volumen de envíos por dominio de destino</div>
-                                </div>
-                            </div>
-                            <table id="domains-table" class="an-table" aria-label="Top dominios">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Dominio</th>
-                                        <th>Envíos</th>
-                                        <th>%</th>
-                                        <th class="col-bar">Volumen</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="5" class="u-loading">Cargando…</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Bounce &amp; Complaints</div>
+                  <div class="chart-card-sub">Evolución de problemas</div>
+                </div>
+                <div class="chart-legend">
+                  <div class="cl-item"><span class="cl-dot" style="background:#f87171"></span>Bounce
+                  </div>
+                  <div class="cl-item"><span class="cl-dot" style="background:#fb923c"></span>Complaint</div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap" style="height:150px">
+                <canvas id="chart-issues" aria-label="Bounce y complaints"></canvas>
+              </div>
+            </div>
 
-            </main><!-- /an-body -->
-        </div><!-- /an-content-area -->
-    </div><!-- /an-page -->
+          </div>
+        </section>
 
-    <!-- Toast de notificaciones -->
-    <div id="an-toast" class="toast" role="status" aria-live="polite"></div>
+        <!-- § Tabla de dominios -->
+        <section aria-label="Top dominios destinatarios">
+          <div class="chart-row r-1">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div>
+                  <div class="chart-card-title">Top dominios destinatarios</div>
+                  <div class="chart-card-sub">Volumen de envíos por dominio de destino</div>
+                </div>
+              </div>
+              <table id="domains-table" class="an-table" aria-label="Top dominios">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Dominio</th>
+                    <th>Envíos</th>
+                    <th>%</th>
+                    <th class="col-bar">Volumen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="5" class="u-loading">Cargando…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-    <!--
+      </main><!-- /an-body -->
+    </div><!-- /an-content-area -->
+  </div><!-- /an-page -->
+
+  <!-- Toast de notificaciones -->
+  <div id="an-toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!--
     SCRIPTS — orden obligatorio:
     1. alerts.js   → define AlertsModule (sin dependencias)
     2. charts.js   → define ChartsModule, usa AlertsModule
     3. Inline       → solo redirige si no hay sesión
-  -->
-    <script src="js/alerts.js"></script>
-    <script src="js/charts.js"></script>
-    <script>
-        (function () {
-            if (!localStorage.getItem('ses_token')) {
-                window.location.href = 'index.html';
-            }
-        }());
-    </script>
+    -->
+  <script src="js/alerts.js"></script>
+  <script src="js/charts.js"></script>
+  <script>
+    (function () {
+      if (!localStorage.getItem('ses_token')) {
+        window.location.href = 'index.html';
+      }
+    }());
+  </script>
 
 </body>
 

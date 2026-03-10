@@ -12,7 +12,7 @@
 const ChartsModule = (() => {
 
     /* ══════════════════════════════════════════════
-       ESTADO INTERNO
+    ESTADO INTERNO
     ══════════════════════════════════════════════ */
     const _s = {
         period: 30,
@@ -28,7 +28,7 @@ const ChartsModule = (() => {
     };
 
     /* ══════════════════════════════════════════════
-       DATOS DE DEMO (fallback cuando no hay API)
+    DATOS DE DEMO (fallback cuando no hay API)
     ══════════════════════════════════════════════ */
     const DEMO_DATA = (() => {
         const stats = {
@@ -58,7 +58,7 @@ const ChartsModule = (() => {
     })();
 
     /* ══════════════════════════════════════════════
-       INIT
+    INIT
     ══════════════════════════════════════════════ */
     function init() {
         _s.theme = localStorage.getItem('mt_theme') || 'dark';
@@ -69,7 +69,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       SIDEBAR — construido por JS para evitar duplicar HTML
+    SIDEBAR — construido por JS para evitar duplicar HTML
     ══════════════════════════════════════════════ */
     function _buildSidebar() {
         const sb = document.getElementById('an-sidebar');
@@ -78,62 +78,62 @@ const ChartsModule = (() => {
         const initials = name.charAt(0).toUpperCase();
 
         sb.innerHTML = `
-      <!-- Brand + collapse -->
-      <div class="asb-brand">
+    <!-- Brand + collapse -->
+    <div class="asb-brand">
         <div class="asb-logo">✦</div>
         <span class="asb-name">Mail<em>Track</em></span>
         <button class="asb-collapse" id="btn-sidebar-collapse" title="Colapsar">‹</button>
-      </div>
+    </div>
 
-      <!-- Navegación -->
-      <nav class="asb-nav" aria-label="Navegación">
+    <!-- Navegación -->
+    <nav class="asb-nav" aria-label="Navegación">
 
-        <span class="asb-section-label">Vistas</span>
+    <span class="asb-section-label">Vistas</span>
 
-        <a href="index.html" class="asb-item" title="Bandeja de envíos">
-          <span class="asb-item-dot" style="background:var(--blue)"></span>
-          <span class="asb-item-label">Bandeja de envíos</span>
-        </a>
-        <a href="analytics.html" class="asb-item active" title="Analítica">
-          <span class="asb-item-dot" style="background:var(--accent)"></span>
-          <span class="asb-item-label">Analítica</span>
-        </a>
+    <a href="index.html" class="asb-item" title="Bandeja de envíos">
+        <span class="asb-item-dot" style="background:var(--blue)"></span>
+        <span class="asb-item-label">Bandeja de envíos</span>
+    </a>
+    <a href="analytics.html" class="asb-item active" title="Analítica">
+        <span class="asb-item-dot" style="background:var(--accent)"></span>
+        <span class="asb-item-label">Analítica</span>
+    </a>
 
-        <span class="asb-section-label" style="margin-top:8px">Período</span>
+    <span class="asb-section-label" style="margin-top:8px">Período</span>
 
-        <div id="sidebar-period-pills" style="display:flex;flex-direction:column;gap:2px">
-          <button class="asb-item sb-period" data-days="7"  title="Últimos 7 días">
-            <span class="asb-item-dot" style="background:var(--text3)"></span>
-            <span class="asb-item-label">Últimos 7 días</span>
-          </button>
-          <button class="asb-item sb-period" data-days="30" title="Últimos 30 días">
-            <span class="asb-item-dot" style="background:var(--accent)"></span>
-            <span class="asb-item-label">Últimos 30 días</span>
-          </button>
-          <button class="asb-item sb-period" data-days="90" title="Últimos 90 días">
-            <span class="asb-item-dot" style="background:var(--text3)"></span>
-            <span class="asb-item-label">Últimos 90 días</span>
-          </button>
-        </div>
-
-        <span class="asb-section-label" style="margin-top:8px">Alertas</span>
-
-        <button class="asb-item" id="btn-alert-settings" title="Configurar umbrales">
-          <span class="asb-item-dot" style="background:var(--yellow)"></span>
-          <span class="asb-item-label">Configurar umbrales</span>
+    <div id="sidebar-period-pills" style="display:flex;flex-direction:column;gap:2px">
+        <button class="asb-item sb-period" data-days="7"  title="Últimos 7 días">
+        <span class="asb-item-dot" style="background:var(--text3)"></span>
+        <span class="asb-item-label">Últimos 7 días</span>
         </button>
+        <button class="asb-item sb-period" data-days="30" title="Últimos 30 días">
+        <span class="asb-item-dot" style="background:var(--accent)"></span>
+        <span class="asb-item-label">Últimos 30 días</span>
+        </button>
+        <button class="asb-item sb-period" data-days="90" title="Últimos 90 días">
+        <span class="asb-item-dot" style="background:var(--text3)"></span>
+        <span class="asb-item-label">Últimos 90 días</span>
+        </button>
+    </div>
 
-      </nav>
+    <span class="asb-section-label" style="margin-top:8px">Alertas</span>
 
-      <!-- Footer -->
-      <div class="asb-footer">
+    <button class="asb-item" id="btn-alert-settings" title="Configurar umbrales">
+        <span class="asb-item-dot" style="background:var(--yellow)"></span>
+        <span class="asb-item-label">Configurar umbrales</span>
+    </button>
+
+    </nav>
+
+    <!-- Footer -->
+    <div class="asb-footer">
         <div class="asb-avatar">${initials}</div>
-        <div class="asb-footer-info">
-          <div class="asb-footer-name">${name}</div>
-          <div class="asb-footer-role">acceso interno</div>
+            <div class="asb-footer-info">
+            <div class="asb-footer-name">${name}</div>
+            <div class="asb-footer-role">acceso interno</div>
         </div>
         <button class="asb-theme-btn" id="btn-theme" title="Cambiar tema">☀</button>
-      </div>`;
+    </div>`;
     }
 
     function _restoreSidebar() {
@@ -146,7 +146,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       EVENT BINDING
+    EVENT BINDING
     ══════════════════════════════════════════════ */
     function _bindControls() {
 
@@ -253,7 +253,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       CARGA DE DATOS
+    CARGA DE DATOS
     ══════════════════════════════════════════════ */
     async function loadFromAPI() {
         _showSkeletons();
@@ -298,7 +298,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       CONTROLES PÚBLICOS
+    CONTROLES PÚBLICOS
     ══════════════════════════════════════════════ */
     function setPeriod(days) {
         _s.period = days;
@@ -349,7 +349,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       RENDER PRINCIPAL
+    RENDER PRINCIPAL
     ══════════════════════════════════════════════ */
     function renderAll() {
         const filtered = _applyFilters(_s.rawItems);
@@ -457,7 +457,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       RENDERERS
+    RENDERERS
     ══════════════════════════════════════════════ */
     function _renderKPIs({ total, delivered, bounce, open, delivRate, bounceRate, openRate }) {
         const c = document.getElementById('kpi-container'); if (!c) return;
@@ -474,22 +474,22 @@ const ChartsModule = (() => {
                 dType: +delivRate >= 95 ? 'good' : +delivRate >= 85 ? 'warn' : 'bad', sub: 'tasa de entrega'
             },
             {
-                label: 'Tasa apertura', icon: '👁', col: 'c-yellow',
+                label: 'Tasa apertura', icon: '👀', col: 'c-yellow',
                 val: openRate + '%', delta: fmt(open),
                 dType: +openRate >= 20 ? 'good' : 'neu', sub: 'correos abiertos'
             },
             {
-                label: 'Bounce rate', icon: '⚠', col: +bounceRate >= 2 ? 'c-red' : 'c-orange',
+                label: 'Bounce rate', icon: '❌', col: +bounceRate >= 2 ? 'c-red' : 'c-orange',
                 val: bounceRate + '%', delta: fmt(bounce),
                 dType: +bounceRate >= 5 ? 'bad' : +bounceRate >= 2 ? 'warn' : 'good', sub: 'límite seguro <2%'
             },
         ].map(({ label, icon, col, val, delta, dType, sub }) => `
-      <div class="kpi-card ${col}">
-        <div class="kc-label">${label}<span class="kc-icon">${icon}</span></div>
-        <div class="kc-val">${val}</div>
-        <div class="kc-delta ${dType}">${arrows[dType] || ''} ${delta}</div>
-        <div class="kc-sub">${sub}</div>
-      </div>`).join('');
+        <div class="kpi-card ${col}">
+            <div class="kc-label">${label}<span class="kc-icon">${icon}</span></div>
+            <div class="kc-val">${val}</div>
+            <div class="kc-delta ${dType}">${arrows[dType] || ''} ${delta}</div>
+            <div class="kc-sub">${sub}</div>
+        </div>`).join('');
     }
 
     function _baseOpts(cc) {
@@ -590,10 +590,10 @@ const ChartsModule = (() => {
             const tot = segs.reduce((a, s) => a + s.value, 0) || 1;
             leg.innerHTML = segs.map(s => `
         <div class="dli">
-          <span class="dli-dot" style="background:${s.color}"></span>
-          <span class="dli-name">${s.label}</span>
-          <span class="dli-val">${Number(s.value).toLocaleString('es-CO')}</span>
-          <span class="dli-pct">${(s.value / tot * 100).toFixed(1)}%</span>
+            <span class="dli-dot" style="background:${s.color}"></span>
+            <span class="dli-name">${s.label}</span>
+            <span class="dli-val">${Number(s.value).toLocaleString('es-CO')}</span>
+            <span class="dli-pct">${(s.value / tot * 100).toFixed(1)}%</span>
         </div>`).join('');
         }
     }
@@ -630,17 +630,17 @@ const ChartsModule = (() => {
         const max = entries[0]?.[1] || 1;
         tbody.innerHTML = entries.length
             ? entries.map(([dom, cnt], i) => `
-          <tr>
+        <tr>
             <td class="t-mono" style="color:var(--text3);width:32px">${i + 1}</td>
             <td class="col-email">@${dom}</td>
             <td class="t-mono">${Number(cnt).toLocaleString('es-CO')}</td>
             <td class="t-mono" style="color:var(--text3)">${total > 0 ? (cnt / total * 100).toFixed(1) : 0}%</td>
             <td class="col-bar">
-              <div class="mini-bar-track">
+            <div class="mini-bar-track">
                 <div class="mini-bar-fill" style="width:${(cnt / max * 100).toFixed(1)}%"></div>
-              </div>
+            </div>
             </td>
-          </tr>`).join('')
+        </tr>`).join('')
             : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Sin datos para el período seleccionado</td></tr>';
     }
 
@@ -666,7 +666,7 @@ const ChartsModule = (() => {
     }
 
     /* ══════════════════════════════════════════════
-       EXPORTACIÓN
+    EXPORTACIÓN
     ══════════════════════════════════════════════ */
     function exportCSV() {
         const items = _applyFilters(_s.rawItems);
@@ -716,11 +716,10 @@ const ChartsModule = (() => {
         ];
         const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Worksheet ss:Name="Analítica"><Table>
-${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n')}
-</Table></Worksheet></Workbook>`;
+        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+        <Worksheet ss:Name="Analítica"><Table>
+        ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n')}
+        </Table></Worksheet></Workbook>`;
 
         const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
         _download(blob, `mailtrack-${_dateTag()}.xls`);
@@ -743,7 +742,7 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
     function _dateTag() { return new Date().toISOString().slice(0, 10); }
 
     /* ══════════════════════════════════════════════
-       UTILIDADES
+    UTILIDADES
     ══════════════════════════════════════════════ */
     function _colors() {
         const l = _s.theme === 'light';
@@ -771,7 +770,7 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
     }
 
     /* ══════════════════════════════════════════════
-       API PÚBLICA
+    API PÚBLICA
     ══════════════════════════════════════════════ */
     return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel };
 
