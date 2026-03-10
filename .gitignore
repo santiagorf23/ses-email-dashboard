@@ -1,4 +1,5 @@
 backend/.env
 backend/venv
-backend/Dockerfile
+Dockerfile
 __pycache__/
+docker-compose.yml
