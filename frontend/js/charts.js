@@ -1,508 +1,594 @@
 /**
  * MailTrack — SES Dashboard
- * js/charts.js
+ * js/charts.js  v3
  *
- * Módulo de gráficos con Chart.js 4.x.
- * Migración futura → React: cada función se convierte en un
- * componente que usa useRef(canvasRef) + useEffect.
+ * ─ Carga datos REALES del backend; fallback a demo si la API no responde.
+ * ─ Sidebar colapsable con nav, períodos y config de alertas.
+ * ─ Filtros: período rápido (7/30/90d) + rango de fechas custom + dominio.
+ * ─ Exportación: CSV y Excel (.xls) sin dependencias externas.
  *
- * Dependencias:
- *   - Chart.js 4.4.x  (CDN o npm install chart.js)
- *   - alerts.js       (AlertsModule)
- *   - styles.css      (variables CSS)
- *
- * Namespace global: ChartsModule
- *   ChartsModule.init(config)          — punto de entrada principal
- *   ChartsModule.loadFromAPI(token)    — carga datos reales
- *   ChartsModule.renderAll(data)       — renderiza toda la página
- *   ChartsModule.setTheme(theme)       — actualiza al cambiar tema
- *   ChartsModule.setPeriod(days)       — filtra por período
- *   ChartsModule.setDomain(domain)     — filtra por dominio
- *   ChartsModule.DEMO_DATA             — datos de prueba
+ * Dependencias: Chart.js 4.x  ·  alerts.js (AlertsModule)
  */
-
 const ChartsModule = (() => {
 
-    /* ─────────────────────────────────────────────────
+    /* ══════════════════════════════════════════════
        ESTADO INTERNO
-       → React: useState / useReducer en <AnalyticsPage>
-       ───────────────────────────────────────────────── */
-    let _state = {
+    ══════════════════════════════════════════════ */
+    const _s = {
         period: 30,
         domain: '',
-        theme: 'dark',
+        dateFrom: null,
+        dateTo: null,
+        theme: localStorage.getItem('mt_theme') || 'dark',
         apiBase: 'http://localhost:8000/api',
-        token: '',
-        instances: {},   // { chartId: Chart }
+        token: localStorage.getItem('ses_token') || '',
+        charts: {},
         rawItems: [],
         stats: null,
     };
 
-    /* ─────────────────────────────────────────────────
-       DATOS DE PRUEBA
-       Genera 90 días de datos realistas con variación
-       aleatoria seeded para reproducibilidad.
-       → React: exportar como /fixtures/analytics.json
-       ───────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════
+       DATOS DE DEMO (fallback cuando no hay API)
+    ══════════════════════════════════════════════ */
     const DEMO_DATA = (() => {
         const stats = {
-            total_sent: 540,
-            total_delivered: 517,
-            total_bounce: 11,
-            total_open: 210,
-            total_complaint: 1,
-            delivery_rate: 95.7,
-            bounce_rate: 2.03,
-            complaint_rate: 0.18,
+            total_sent: 540, total_delivered: 517, total_bounce: 11,
+            total_open: 210, total_complaint: 1,
+            delivery_rate: 95.7, bounce_rate: 2.03, complaint_rate: 0.18,
         };
-
-        // Genera N días de series de tiempo con ruido realista
-        function timeSeries(days) {
-            const now = new Date();
-            const items = [];
-            const domains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'empresa.co'];
-            const statuses = ['delivered', 'delivered', 'delivered', 'delivered', 'delivered', 'bounce', 'open', 'complaint'];
-
-            for (let d = days - 1; d >= 0; d--) {
-                const date = new Date(now);
-                date.setDate(date.getDate() - d);
-
-                // Volumen diario con pico entre semana
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const baseVol = isWeekend ? 8 : 22;
-                const vol = baseVol + Math.floor(Math.sin(d * 0.4) * 6 + Math.random() * 8);
-
-                for (let i = 0; i < vol; i++) {
-                    const status = statuses[Math.floor(Math.random() * statuses.length)];
-                    const domain = domains[Math.floor(Math.random() * domains.length)];
-                    items.push({
-                        id: d * 100 + i,
-                        email_to: `user${i}@${domain}`,
-                        subject: `Correo de prueba #${d * 100 + i}`,
-                        status: status,
-                        created_at: date.toISOString(),
-                    });
-                }
+        const domains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'empresa.co'];
+        const statuses = ['delivered', 'delivered', 'delivered', 'delivered', 'bounce', 'open', 'complaint', 'delivered'];
+        const items = [];
+        const now = new Date();
+        for (let d = 89; d >= 0; d--) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - d);
+            const vol = (date.getDay() === 0 || date.getDay() === 6) ? 8 : 22;
+            for (let i = 0; i < vol; i++) {
+                items.push({
+                    id: d * 100 + i,
+                    email_to: `user${i}@${domains[i % domains.length]}`,
+                    subject: `Correo #${d * 100 + i}`,
+                    status: statuses[(d + i) % statuses.length],
+                    created_at: date.toISOString(),
+                });
             }
-            return items;
         }
-
-        return { stats, items: timeSeries(90) };
+        return { stats, items };
     })();
 
-    /* ─────────────────────────────────────────────────
-       §A  INICIALIZACIÓN
-       → React: useEffect(() => { fetchData() }, [period])
-       ───────────────────────────────────────────────── */
-    function init({ apiBase, token, theme } = {}) {
-        if (apiBase) _state.apiBase = apiBase;
-        if (token) _state.token = token;
-        if (theme) _state.theme = theme;
-
-        _state.theme = localStorage.getItem('mt_theme') || 'dark';
-        _bindControls();
-        _applyTheme(_state.theme);
+    /* ══════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════ */
+    function init() {
+        _s.theme = localStorage.getItem('mt_theme') || 'dark';
+        _applyTheme(_s.theme);
+        _buildSidebar();   // inyecta HTML del sidebar
+        _bindControls();   // event listeners sobre todos los controles
+        _restoreSidebar(); // colapso persistido
     }
 
+    /* ══════════════════════════════════════════════
+       SIDEBAR — construido por JS para evitar duplicar HTML
+    ══════════════════════════════════════════════ */
+    function _buildSidebar() {
+        const sb = document.getElementById('an-sidebar');
+        if (!sb) return;
+        const name = localStorage.getItem('ses_username') || 'Administrador';
+        const initials = name.charAt(0).toUpperCase();
+
+        sb.innerHTML = `
+      <!-- Brand + collapse -->
+      <div class="asb-brand">
+        <div class="asb-logo">✦</div>
+        <span class="asb-name">Mail<em>Track</em></span>
+        <button class="asb-collapse" id="btn-sidebar-collapse" title="Colapsar">‹</button>
+      </div>
+
+      <!-- Navegación -->
+      <nav class="asb-nav" aria-label="Navegación">
+
+        <span class="asb-section-label">Vistas</span>
+
+        <a href="index.html" class="asb-item" title="Bandeja de envíos">
+          <span class="asb-item-dot" style="background:var(--blue)"></span>
+          <span class="asb-item-label">Bandeja de envíos</span>
+        </a>
+        <a href="analytics.html" class="asb-item active" title="Analítica">
+          <span class="asb-item-dot" style="background:var(--accent)"></span>
+          <span class="asb-item-label">Analítica</span>
+        </a>
+
+        <span class="asb-section-label" style="margin-top:8px">Período</span>
+
+        <div id="sidebar-period-pills" style="display:flex;flex-direction:column;gap:2px">
+          <button class="asb-item sb-period" data-days="7"  title="Últimos 7 días">
+            <span class="asb-item-dot" style="background:var(--text3)"></span>
+            <span class="asb-item-label">Últimos 7 días</span>
+          </button>
+          <button class="asb-item sb-period" data-days="30" title="Últimos 30 días">
+            <span class="asb-item-dot" style="background:var(--accent)"></span>
+            <span class="asb-item-label">Últimos 30 días</span>
+          </button>
+          <button class="asb-item sb-period" data-days="90" title="Últimos 90 días">
+            <span class="asb-item-dot" style="background:var(--text3)"></span>
+            <span class="asb-item-label">Últimos 90 días</span>
+          </button>
+        </div>
+
+        <span class="asb-section-label" style="margin-top:8px">Alertas</span>
+
+        <button class="asb-item" id="btn-alert-settings" title="Configurar umbrales">
+          <span class="asb-item-dot" style="background:var(--yellow)"></span>
+          <span class="asb-item-label">Configurar umbrales</span>
+        </button>
+
+      </nav>
+
+      <!-- Footer -->
+      <div class="asb-footer">
+        <div class="asb-avatar">${initials}</div>
+        <div class="asb-footer-info">
+          <div class="asb-footer-name">${name}</div>
+          <div class="asb-footer-role">acceso interno</div>
+        </div>
+        <button class="asb-theme-btn" id="btn-theme" title="Cambiar tema">☀</button>
+      </div>`;
+    }
+
+    function _restoreSidebar() {
+        if (localStorage.getItem('sb_an_collapsed') === '1') {
+            const sb = document.getElementById('an-sidebar');
+            const btn = document.getElementById('btn-sidebar-collapse');
+            sb?.classList.add('collapsed');
+            if (btn) btn.textContent = '›';
+        }
+    }
+
+    /* ══════════════════════════════════════════════
+       EVENT BINDING
+    ══════════════════════════════════════════════ */
     function _bindControls() {
-        // Period pills
-        document.querySelectorAll('.an-pill[data-days]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                setPeriod(parseInt(btn.dataset.days));
-            });
+
+        /* ── Period pills (topbar) ── */
+        document.querySelectorAll('.an-pill[data-days]').forEach(b =>
+            b.addEventListener('click', () => setPeriod(parseInt(b.dataset.days)))
+        );
+
+        /* ── Period pills (sidebar) ── */
+        document.querySelectorAll('.sb-period[data-days]').forEach(b =>
+            b.addEventListener('click', () => setPeriod(parseInt(b.dataset.days)))
+        );
+
+        /* ── Domain select ── */
+        const domSel = document.getElementById('an-domain');
+        if (domSel) domSel.addEventListener('change', () => { _s.domain = domSel.value; _rerender(); });
+
+        /* ── Date range inputs ── */
+        const df = document.getElementById('date-from');
+        const dt = document.getElementById('date-to');
+        if (df) df.addEventListener('change', () => {
+            _s.dateFrom = df.value ? new Date(df.value + 'T00:00:00') : null;
+            if (df.value) { _s.period = 0; _clearPeriodPills(); }
+            _rerender();
+        });
+        if (dt) dt.addEventListener('change', () => {
+            _s.dateTo = dt.value ? new Date(dt.value + 'T23:59:59') : null;
+            if (dt.value) { _s.period = 0; _clearPeriodPills(); }
+            _rerender();
         });
 
-        // Domain select
-        const domSel = document.getElementById('an-domain');
-        if (domSel) domSel.addEventListener('change', () => setDomain(domSel.value));
-
-        // Refresh button
-        const refBtn = document.getElementById('btn-refresh');
-        if (refBtn) refBtn.addEventListener('click', () => {
-            refBtn.classList.add('spinning');
+        /* ── Refresh ── */
+        const rb = document.getElementById('btn-refresh');
+        if (rb) rb.addEventListener('click', () => {
+            rb.classList.add('spinning');
             loadFromAPI().finally(() => {
-                setTimeout(() => refBtn.classList.remove('spinning'), 600);
+                setTimeout(() => rb.classList.remove('spinning'), 700);
                 AlertsModule?.showToast('✓ Datos actualizados');
             });
         });
 
-        // Theme toggle
-        const themeBtn = document.getElementById('btn-theme');
-        if (themeBtn) themeBtn.addEventListener('click', () => {
-            const next = _state.theme === 'dark' ? 'light' : 'dark';
+        /* ── Theme toggle ── */
+        // Puede estar en la topbar o en el footer del sidebar (o en ambos).
+        // Usamos delegación para capturarlo donde sea.
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('#btn-theme');
+            if (!btn) return;
+            const next = _s.theme === 'dark' ? 'light' : 'dark';
             setTheme(next);
             localStorage.setItem('mt_theme', next);
         });
+
+        /* ── Export dropdown ── */
+        const eb = document.getElementById('btn-export');
+        const ed = document.getElementById('export-dropdown');
+        if (eb && ed) {
+            eb.addEventListener('click', e => {
+                e.stopPropagation();
+                const open = ed.classList.toggle('open');
+                eb.classList.toggle('open', open);
+                eb.setAttribute('aria-expanded', open);
+            });
+            document.addEventListener('click', () => {
+                eb.classList.remove('open');
+                ed.classList.remove('open');
+                eb.setAttribute('aria-expanded', 'false');
+            });
+            document.getElementById('export-csv')?.addEventListener('click', () => exportCSV());
+            document.getElementById('export-excel')?.addEventListener('click', () => exportExcel());
+        }
+
+        /* ── Alert settings ── */
+        document.addEventListener('click', e => {
+            if (e.target.closest('#btn-alert-settings')) AlertsModule?.openSettings();
+        });
+
+        /* ── Mobile hamburger ── */
+        document.getElementById('btn-mobile-menu')?.addEventListener('click', _toggleMobileSidebar);
+        document.getElementById('sidebar-overlay')?.addEventListener('click', _toggleMobileSidebar);
+
+        /* ── Sidebar collapse (desktop) ── */
+        document.addEventListener('click', e => {
+            const btn = e.target.closest('#btn-sidebar-collapse');
+            if (!btn) return;
+            const sb = document.getElementById('an-sidebar');
+            const collapsed = sb?.classList.toggle('collapsed');
+            btn.textContent = collapsed ? '›' : '‹';
+            localStorage.setItem('sb_an_collapsed', collapsed ? '1' : '0');
+        });
     }
 
-    /* ─────────────────────────────────────────────────
-       §B  DATA LOADING
-       → React: custom hook useAnalyticsData(period)
-       ───────────────────────────────────────────────── */
-    async function loadFromAPI() {
-        _showLoading();
-        try {
-            // Stats endpoint
-            const statsRes = await _apiFetch('/emails/stats');
+    function _toggleMobileSidebar() {
+        const sb = document.getElementById('an-sidebar');
+        const ov = document.getElementById('sidebar-overlay');
+        sb?.classList.toggle('open');
+        ov?.classList.toggle('show');
+    }
 
-            // Paginar todos los emails (límite 100/página)
+    function _clearPeriodPills() {
+        document.querySelectorAll('.an-pill[data-days]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sb-period[data-days]').forEach(b => {
+            b.querySelector('.asb-item-dot').style.background = 'var(--text3)';
+        });
+    }
+
+    /* ══════════════════════════════════════════════
+       CARGA DE DATOS
+    ══════════════════════════════════════════════ */
+    async function loadFromAPI() {
+        _showSkeletons();
+        try {
+            const stats = await _fetch('/emails/stats');
             let items = [], page = 1, pages = 1;
             do {
-                const res = await _apiFetch(`/emails?page=${page}&per_page=100`);
+                const res = await _fetch(`/emails?page=${page}&per_page=100`);
                 items.push(...(res.items || []));
                 pages = res.pages || 1;
                 page++;
-            } while (page <= pages && page <= 20); // safety cap 2000
+            } while (page <= pages && page <= 20); // safety cap 2 000 correos
 
-            _state.rawItems = items;
-            _state.stats = statsRes;
+            _s.rawItems = items;
+            _s.stats = stats;
+            window._lastStats = stats;
 
             _populateDomainSelector(items);
-            renderAll({ stats: statsRes, items });
-
-            // Marcar alert container como cargado (evita el demo fallback)
-            const ac = document.getElementById('alert-container');
-            if (ac) ac.dataset.loaded = 'true';
-            AlertsModule?.render(ac, statsRes);
+            renderAll();
+            AlertsModule?.render(document.getElementById('alert-container'), stats);
 
         } catch (err) {
-            console.warn('[ChartsModule] API no disponible, usando datos de prueba.', err.message);
+            console.warn('[ChartsModule] API no disponible, usando datos demo.', err.message);
             _useDemoData();
         }
     }
 
     function _useDemoData() {
-        _state.rawItems = DEMO_DATA.items;
-        _state.stats = DEMO_DATA.stats;
+        _s.rawItems = DEMO_DATA.items;
+        _s.stats = DEMO_DATA.stats;
+        window._lastStats = DEMO_DATA.stats;
         _populateDomainSelector(DEMO_DATA.items);
-        renderAll({ stats: DEMO_DATA.stats, items: DEMO_DATA.items });
-
-        const ac = document.getElementById('alert-container');
-        if (ac) {
-            ac.dataset.loaded = 'true';
-            AlertsModule?.render(ac, DEMO_DATA.stats);
-        }
+        renderAll();
+        AlertsModule?.render(document.getElementById('alert-container'), DEMO_DATA.stats);
     }
 
-    async function _apiFetch(path) {
-        const headers = _state.token ? { Authorization: `Bearer ${_state.token}` } : {};
-        const res = await fetch(_state.apiBase + path, { headers });
+    async function _fetch(path) {
+        const headers = _s.token ? { Authorization: `Bearer ${_s.token}` } : {};
+        const res = await fetch(_s.apiBase + path, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
     }
 
-    /* ─────────────────────────────────────────────────
-       §C  PUBLIC CONTROLS
-       → React: state setters + useEffect re-renders
-       ───────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════
+       CONTROLES PÚBLICOS
+    ══════════════════════════════════════════════ */
     function setPeriod(days) {
-        _state.period = days;
+        _s.period = days;
+        _s.dateFrom = null;
+        _s.dateTo = null;
+
+        // Limpiar inputs de fecha
+        const df = document.getElementById('date-from');
+        const dt = document.getElementById('date-to');
+        if (df) df.value = '';
+        if (dt) dt.value = '';
+
+        // Actualizar pills de topbar
         document.querySelectorAll('.an-pill[data-days]').forEach(b =>
             b.classList.toggle('active', parseInt(b.dataset.days) === days)
         );
-        if (_state.rawItems.length) renderAll({ stats: _state.stats, items: _state.rawItems });
+
+        // Actualizar pills del sidebar
+        document.querySelectorAll('.sb-period[data-days]').forEach(b => {
+            const active = parseInt(b.dataset.days) === days;
+            b.querySelector('.asb-item-dot').style.background = active ? 'var(--accent)' : 'var(--text3)';
+        });
+
+        // Actualizar etiquetas en subtítulos de gráficas
+        document.querySelectorAll('[data-period-label]').forEach(el => {
+            el.textContent = days === 0 ? 'rango personalizado' : `últimos ${days} días`;
+        });
+
+        _rerender();
     }
 
-    function setDomain(domain) {
-        _state.domain = domain;
-        if (_state.rawItems.length) renderAll({ stats: _state.stats, items: _state.rawItems });
-    }
-
-    function setTheme(theme) {
-        _state.theme = theme;
-        _applyTheme(theme);
-        if (_state.rawItems.length) renderAll({ stats: _state.stats, items: _state.rawItems });
+    function setTheme(t) {
+        _s.theme = t;
+        _applyTheme(t);
+        _rerender();
     }
 
     function _applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
-        if (theme !== 'light') document.documentElement.removeAttribute('data-theme');
-        const btn = document.getElementById('btn-theme');
-        if (btn) btn.textContent = theme === 'light' ? '☾' : '☀';
-    }
-
-    /* ─────────────────────────────────────────────────
-       §D  MAIN RENDER ORCHESTRATOR
-       → React: <AnalyticsPage> renders child components
-       ───────────────────────────────────────────────── */
-    function renderAll({ stats, items }) {
-        // Filter by domain
-        const filtered = _state.domain
-            ? items.filter(e => (e.email_to || '').includes('@' + _state.domain))
-            : items;
-
-        // Build time series buckets
-        const { labels, sentArr, deliveredArr, bounceArr, openArr, complaintArr } =
-            _buildTimeSeries(filtered, _state.period);
-
-        // Compute KPIs
-        const totalSent = stats.total_sent || 0;
-        const totalDelivered = stats.total_delivered || 0;
-        const totalBounce = stats.total_bounce || 0;
-        const totalOpen = stats.total_open || 0;
-        const totalComplaint = stats.total_complaint || 0;
-        const delivRate = stats.delivery_rate || 0;
-        const bounceRate = parseFloat(stats.bounce_rate) || 0;
-        const openRate = totalSent > 0 ? (totalOpen / totalSent * 100).toFixed(1) : 0;
-
-        // Domain distribution
-        const domainMap = {};
-        filtered.forEach(e => {
-            const m = (e.email_to || '').match(/@([^\s>]+)/);
-            if (m) domainMap[m[1]] = (domainMap[m[1]] || 0) + 1;
-        });
-        const domainEntries = Object.entries(domainMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
-
-        // Render KPI cards
-        _renderKPIRow({ totalSent, totalDelivered, totalBounce, totalOpen, delivRate, bounceRate, openRate });
-
-        // Render charts
-        _destroyAll();
-        const cc = _chartColors();
-
-        _renderLineChart('chart-trend', labels, sentArr, deliveredArr, cc);
-        _renderBarChart('chart-bar', labels, deliveredArr, bounceArr, cc);
-        _renderDonutChart('chart-donut', { totalDelivered, totalOpen, totalBounce, totalComplaint, totalSent });
-        _renderAreaChart('chart-opens', labels, openArr, cc.yellow, cc);
-        _renderIssuesChart('chart-issues', labels, bounceArr, complaintArr, cc);
-        _renderDomainsTable(domainEntries, filtered.length);
-
-        // Update chart subtitles with period
-        document.querySelectorAll('[data-period-label]').forEach(el => {
-            el.textContent = `últimos ${_state.period} días`;
+        if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        else document.documentElement.removeAttribute('data-theme');
+        document.querySelectorAll('#btn-theme').forEach(b => {
+            b.textContent = theme === 'light' ? '☾' : '☀';
         });
     }
 
-    /* ─────────────────────────────────────────────────
-       §E  TIME SERIES BUILDER
-       → React: useMemo(() => buildSeries(items, period), [items, period])
-       ───────────────────────────────────────────────── */
-    function _buildTimeSeries(items, days) {
+    function _rerender() {
+        if (_s.rawItems.length) renderAll();
+    }
+
+    /* ══════════════════════════════════════════════
+       RENDER PRINCIPAL
+    ══════════════════════════════════════════════ */
+    function renderAll() {
+        const filtered = _applyFilters(_s.rawItems);
+        const series = _buildSeries(filtered);
+        const kpis = _computeKPIs(filtered);
+        const domains = _domainMap(filtered);
+
+        _destroyCharts();
+        const cc = _colors();
+
+        _renderKPIs(kpis);
+        _renderLineChart('chart-trend', series, cc);
+        _renderBarChart('chart-bar', series, cc);
+        _renderDonut('chart-donut', kpis, cc);
+        _renderArea('chart-opens', series.labels, series.openArr, cc.yellow, cc);
+        _renderIssues('chart-issues', series, cc);
+        _renderDomainTable(domains, filtered.length);
+    }
+
+    /* ── Filtros ── */
+    function _applyFilters(items) {
+        let out = items;
+        if (_s.domain) {
+            out = out.filter(e => (e.email_to || '').includes('@' + _s.domain));
+        }
+        if (_s.period > 0) {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - _s.period);
+            out = out.filter(e => new Date(e.created_at) >= cutoff);
+        } else if (_s.dateFrom || _s.dateTo) {
+            if (_s.dateFrom) out = out.filter(e => new Date(e.created_at) >= _s.dateFrom);
+            if (_s.dateTo) out = out.filter(e => new Date(e.created_at) <= _s.dateTo);
+        }
+        return out;
+    }
+
+    /* ── Series de tiempo ── */
+    function _buildSeries(items) {
         const TZ = 'America/Bogota';
         const now = new Date();
+        const days = _s.period > 0 ? _s.period : _calcCustomDays();
         const buckets = {};
 
         for (let i = days - 1; i >= 0; i--) {
             const d = new Date(now);
             d.setDate(d.getDate() - i);
-            const key = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', timeZone: TZ });
-            buckets[key] = { sent: 0, delivered: 0, bounce: 0, open: 0, complaint: 0 };
+            const k = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', timeZone: TZ });
+            buckets[k] = { sent: 0, delivered: 0, bounce: 0, open: 0, complaint: 0 };
         }
 
         items.forEach(e => {
-            const key = new Date(e.created_at)
-                .toLocaleDateString('es-CO', { day: '2-digit', month: 'short', timeZone: TZ });
-            if (!buckets[key]) return;
+            const k = new Date(e.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', timeZone: TZ });
+            if (!buckets[k]) return;
             const st = (e.status || '').toLowerCase();
-            buckets[key].sent++;
-            if (st === 'delivery' || st === 'delivered') buckets[key].delivered++;
-            else if (st === 'bounce') buckets[key].bounce++;
-            else if (st === 'complaint') buckets[key].complaint++;
-            else if (st === 'open') buckets[key].open++;
+            buckets[k].sent++;
+            if (st === 'delivery' || st === 'delivered') buckets[k].delivered++;
+            else if (st === 'bounce') buckets[k].bounce++;
+            else if (st === 'complaint') buckets[k].complaint++;
+            else if (st === 'open') buckets[k].open++;
         });
 
         const labels = Object.keys(buckets);
-        const sentArr = labels.map(k => buckets[k].sent);
-        const deliveredArr = labels.map(k => buckets[k].delivered);
-        const bounceArr = labels.map(k => buckets[k].bounce);
-        const openArr = labels.map(k => buckets[k].open);
-        const complaintArr = labels.map(k => buckets[k].complaint);
-
-        return { labels, sentArr, deliveredArr, bounceArr, openArr, complaintArr };
+        return {
+            labels,
+            sentArr: labels.map(k => buckets[k].sent),
+            deliveredArr: labels.map(k => buckets[k].delivered),
+            bounceArr: labels.map(k => buckets[k].bounce),
+            openArr: labels.map(k => buckets[k].open),
+            complaintArr: labels.map(k => buckets[k].complaint),
+        };
     }
 
-    /* ─────────────────────────────────────────────────
-       §F  KPI CARDS RENDERER
-       → React: <KPIRow> + <KPICard label color ... />
-       ───────────────────────────────────────────────── */
-    function _renderKPIRow({ totalSent, totalDelivered, totalBounce, totalOpen, delivRate, bounceRate, openRate }) {
-        const container = document.getElementById('kpi-container');
-        if (!container) return;
+    function _calcCustomDays() {
+        if (_s.dateFrom && _s.dateTo) {
+            return Math.max(1, Math.ceil((_s.dateTo - _s.dateFrom) / 86400000));
+        }
+        return 30;
+    }
 
+    /* ── KPIs calculados sobre ítems filtrados ── */
+    function _computeKPIs(items) {
+        let delivered = 0, bounce = 0, open = 0, complaint = 0;
+        items.forEach(e => {
+            const st = (e.status || '').toLowerCase();
+            if (st === 'delivery' || st === 'delivered') delivered++;
+            else if (st === 'bounce') bounce++;
+            else if (st === 'complaint') complaint++;
+            else if (st === 'open') open++;
+        });
+        const total = items.length;
+        const delivRate = total > 0 ? (delivered / total * 100).toFixed(1) : (parseFloat(_s.stats?.delivery_rate) || 0);
+        const bounceRate = total > 0 ? (bounce / total * 100).toFixed(2) : (parseFloat(_s.stats?.bounce_rate) || 0);
+        const openRate = total > 0 ? (open / total * 100).toFixed(1) : 0;
+        return { total, delivered, bounce, open, complaint, delivRate, bounceRate, openRate };
+    }
+
+    /* ── Mapa de dominios ── */
+    function _domainMap(items) {
+        const m = {};
+        items.forEach(e => {
+            const match = (e.email_to || '').match(/@([^\s>]+)/);
+            if (match) m[match[1]] = (m[match[1]] || 0) + 1;
+        });
+        return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    }
+
+    /* ══════════════════════════════════════════════
+       RENDERERS
+    ══════════════════════════════════════════════ */
+    function _renderKPIs({ total, delivered, bounce, open, delivRate, bounceRate, openRate }) {
+        const c = document.getElementById('kpi-container'); if (!c) return;
         const fmt = n => Number(n).toLocaleString('es-CO');
-
-        const cards = [
-            {
-                label: 'Enviados', icon: '📤', colorClass: 'c-blue',
-                val: fmt(totalSent), delta: '100%', deltaType: 'neu',
-                sub: 'correos en total',
-            },
-            {
-                label: 'Entregados', icon: '✅', colorClass: 'c-green',
-                val: fmt(totalDelivered), delta: delivRate + '%', deltaType: delivRate >= 95 ? 'good' : delivRate >= 85 ? 'warn' : 'bad',
-                sub: 'tasa de entrega',
-            },
-            {
-                label: 'Tasa apertura', icon: '👁', colorClass: 'c-yellow',
-                val: openRate + '%', delta: fmt(totalOpen), deltaType: openRate >= 20 ? 'good' : 'neu',
-                sub: 'correos abiertos',
-            },
-            {
-                label: 'Bounce rate', icon: '⚠', colorClass: bounceRate >= 2 ? 'c-red' : 'c-orange',
-                val: bounceRate + '%', delta: fmt(totalBounce), deltaType: bounceRate >= 5 ? 'bad' : bounceRate >= 2 ? 'warn' : 'good',
-                sub: 'límite seguro < 2%',
-            },
-        ];
-
         const arrows = { good: '↑', bad: '↓', warn: '⚠', neu: '' };
-
-        container.innerHTML = cards.map(c => `
-      <div class="kpi-card ${c.colorClass}">
-        <div class="kc-label">${c.label} <span class="kc-icon">${c.icon}</span></div>
-        <div class="kc-val">${c.val}</div>
-        <div class="kc-delta ${c.deltaType}">${arrows[c.deltaType] || ''} ${c.delta}</div>
-        <div class="kc-sub">${c.sub}</div>
+        c.innerHTML = [
+            {
+                label: 'Enviados', icon: '📤', col: 'c-blue',
+                val: fmt(total), delta: 'período selec.', dType: 'neu', sub: 'correos en el período'
+            },
+            {
+                label: 'Entregados', icon: '✅', col: 'c-green',
+                val: fmt(delivered), delta: delivRate + '%',
+                dType: +delivRate >= 95 ? 'good' : +delivRate >= 85 ? 'warn' : 'bad', sub: 'tasa de entrega'
+            },
+            {
+                label: 'Tasa apertura', icon: '👁', col: 'c-yellow',
+                val: openRate + '%', delta: fmt(open),
+                dType: +openRate >= 20 ? 'good' : 'neu', sub: 'correos abiertos'
+            },
+            {
+                label: 'Bounce rate', icon: '⚠', col: +bounceRate >= 2 ? 'c-red' : 'c-orange',
+                val: bounceRate + '%', delta: fmt(bounce),
+                dType: +bounceRate >= 5 ? 'bad' : +bounceRate >= 2 ? 'warn' : 'good', sub: 'límite seguro <2%'
+            },
+        ].map(({ label, icon, col, val, delta, dType, sub }) => `
+      <div class="kpi-card ${col}">
+        <div class="kc-label">${label}<span class="kc-icon">${icon}</span></div>
+        <div class="kc-val">${val}</div>
+        <div class="kc-delta ${dType}">${arrows[dType] || ''} ${delta}</div>
+        <div class="kc-sub">${sub}</div>
       </div>`).join('');
     }
 
-    /* ─────────────────────────────────────────────────
-       §G  CHART.JS RENDERERS
-       → React: cada función → componente con useRef + useEffect
-       ───────────────────────────────────────────────── */
-
-    // Shared base options — → React: chartDefaultOptions.js
-    function _baseOptions(cc, { stacked = false } = {}) {
+    function _baseOpts(cc) {
+        const light = _s.theme === 'light';
         return {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: _state.theme === 'light' ? '#fff' : '#18181b',
-                    borderColor: _state.theme === 'light' ? '#e2e6ec' : '#2a303a',
-                    borderWidth: 1,
-                    titleColor: _state.theme === 'light' ? '#111827' : '#f0f2f5',
-                    bodyColor: _state.theme === 'light' ? '#4b5563' : '#8b95a6',
-                    titleFont: { family: 'Syne, sans-serif', weight: '700', size: 12 },
-                    bodyFont: { family: 'DM Mono, monospace', size: 11 },
-                    padding: 10,
-                    cornerRadius: 8,
+                    backgroundColor: light ? '#fff' : '#18181b',
+                    borderColor: light ? '#e2e6ec' : '#2a303a', borderWidth: 1,
+                    titleColor: light ? '#111827' : '#f0f2f5',
+                    bodyColor: light ? '#4b5563' : '#8b95a6',
+                    titleFont: { family: 'Syne', weight: '700', size: 12 },
+                    bodyFont: { family: 'DM Mono', size: 11 },
+                    padding: 10, cornerRadius: 8,
                 },
             },
             scales: {
                 x: {
-                    stacked: stacked,
-                    grid: { color: cc.grid, drawBorder: false },
-                    ticks: { color: cc.tick, font: { family: 'DM Mono, monospace', size: 10 }, maxRotation: 0, maxTicksLimit: 7 },
-                    border: { display: false },
+                    grid: { color: cc.grid, drawBorder: false }, border: { display: false },
+                    ticks: { color: cc.tick, font: { family: 'DM Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 7 }
                 },
                 y: {
-                    stacked: stacked,
-                    grid: { color: cc.grid, drawBorder: false },
-                    ticks: { color: cc.tick, font: { family: 'DM Mono, monospace', size: 10 }, precision: 0 },
-                    border: { display: false },
-                    beginAtZero: true,
+                    grid: { color: cc.grid, drawBorder: false }, border: { display: false },
+                    ticks: { color: cc.tick, font: { family: 'DM Mono', size: 10 }, precision: 0 }, beginAtZero: true
                 },
             },
         };
     }
 
-    // → React: <TrendChart labels sent delivered />
-    function _renderLineChart(id, labels, sentArr, deliveredArr, cc) {
-        const canvas = document.getElementById(id);
-        if (!canvas) return;
-        _state.instances[id] = new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [
+    function _renderLineChart(id, { labels, sentArr, deliveredArr }, cc) {
+        const cv = document.getElementById(id); if (!cv) return;
+        _s.charts[id] = new Chart(cv.getContext('2d'), {
+            type: 'line', data: {
+                labels, datasets: [
                     {
-                        label: 'Enviados', data: sentArr,
-                        borderColor: cc.blue, backgroundColor: _rgba(cc.blue, .08),
-                        fill: true, tension: .4, borderWidth: 2,
-                        pointRadius: 3, pointBackgroundColor: cc.blue, pointHoverRadius: 5,
+                        label: 'Enviados', data: sentArr, borderColor: cc.blue, backgroundColor: _rgba(cc.blue, .08),
+                        fill: true, tension: .4, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.blue, pointHoverRadius: 5
                     },
                     {
-                        label: 'Entregados', data: deliveredArr,
-                        borderColor: cc.green, backgroundColor: _rgba(cc.green, .08),
-                        fill: true, tension: .4, borderWidth: 2,
-                        pointRadius: 3, pointBackgroundColor: cc.green, pointHoverRadius: 5,
+                        label: 'Entregados', data: deliveredArr, borderColor: cc.green, backgroundColor: _rgba(cc.green, .08),
+                        fill: true, tension: .4, borderWidth: 2, pointRadius: 3, pointBackgroundColor: cc.green, pointHoverRadius: 5
                     },
-                ],
-            },
-            options: _baseOptions(cc),
+                ]
+            }, options: _baseOpts(cc)
         });
     }
 
-    // → React: <ComparisonBarChart labels delivered bounce />
-    function _renderBarChart(id, labels, deliveredArr, bounceArr, cc) {
-        const canvas = document.getElementById(id);
-        if (!canvas) return;
-        _state.instances[id] = new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [
-                    {
-                        label: 'Entregados', data: deliveredArr,
-                        backgroundColor: _rgba(cc.green, .75),
-                        borderRadius: 3, barPercentage: .6, categoryPercentage: .7,
-                    },
-                    {
-                        label: 'Bounce', data: bounceArr,
-                        backgroundColor: _rgba(cc.red, .75),
-                        borderRadius: 3, barPercentage: .6, categoryPercentage: .7,
-                    },
-                ],
-            },
-            options: _baseOptions(cc),
+    function _renderBarChart(id, { labels, deliveredArr, bounceArr }, cc) {
+        const cv = document.getElementById(id); if (!cv) return;
+        _s.charts[id] = new Chart(cv.getContext('2d'), {
+            type: 'bar', data: {
+                labels, datasets: [
+                    { label: 'Entregados', data: deliveredArr, backgroundColor: _rgba(cc.green, .75), borderRadius: 3, barPercentage: .6, categoryPercentage: .7 },
+                    { label: 'Bounce', data: bounceArr, backgroundColor: _rgba(cc.red, .75), borderRadius: 3, barPercentage: .6, categoryPercentage: .7 },
+                ]
+            }, options: _baseOpts(cc)
         });
     }
 
-    // → React: <DistributionDonut segments onHover />
-    function _renderDonutChart(id, { totalDelivered, totalOpen, totalBounce, totalComplaint, totalSent }) {
-        const canvas = document.getElementById(id);
-        if (!canvas) return;
-
-        const pending = Math.max(0, totalSent - totalDelivered - totalBounce - totalComplaint);
-        const cc = _chartColors();
-
-        const segments = [
-            { label: 'Entregados', value: totalDelivered, color: cc.green },
-            { label: 'Abiertos', value: totalOpen, color: cc.yellow },
-            { label: 'Bounce', value: totalBounce, color: cc.red },
-            { label: 'Complaint', value: totalComplaint, color: cc.orange },
-            { label: 'Pendiente', value: pending, color: _state.theme === 'light' ? '#d1d5db' : '#27272a' },
+    function _renderDonut(id, { total, delivered, open, bounce, complaint }, cc) {
+        const cv = document.getElementById(id); if (!cv) return;
+        const pending = Math.max(0, total - delivered - bounce - complaint);
+        const segs = [
+            { label: 'Entregados', value: delivered, color: cc.green },
+            { label: 'Abiertos', value: open, color: cc.yellow },
+            { label: 'Bounce', value: bounce, color: cc.red },
+            { label: 'Complaint', value: complaint, color: cc.orange },
+            { label: 'Pendiente', value: pending, color: _s.theme === 'light' ? '#d1d5db' : '#27272a' },
         ].filter(s => s.value > 0);
 
-        _state.instances[id] = new Chart(canvas.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: segments.map(s => s.label),
+        _s.charts[id] = new Chart(cv.getContext('2d'), {
+            type: 'doughnut', data: {
+                labels: segs.map(s => s.label),
                 datasets: [{
-                    data: segments.map(s => s.value),
-                    backgroundColor: segments.map(s => s.color),
-                    borderColor: _state.theme === 'light' ? '#ffffff' : '#0d0f12',
-                    borderWidth: 3,
-                    hoverOffset: 6,
+                    data: segs.map(s => s.value), backgroundColor: segs.map(s => s.color),
+                    borderColor: _s.theme === 'light' ? '#fff' : '#0d0f12', borderWidth: 3, hoverOffset: 6
                 }],
-            },
-            options: {
-                responsive: false, cutout: '68%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: _state.theme === 'light' ? '#fff' : '#18181b',
-                        borderColor: _state.theme === 'light' ? '#e2e6ec' : '#2a303a',
-                        borderWidth: 1, cornerRadius: 8, padding: 10,
-                        titleColor: _state.theme === 'light' ? '#111827' : '#f0f2f5',
-                        bodyColor: _state.theme === 'light' ? '#4b5563' : '#8b95a6',
-                        titleFont: { family: 'Syne', weight: '700', size: 12 },
-                        bodyFont: { family: 'DM Mono', size: 11 },
-                        callbacks: {
-                            label: ctx => ` ${ctx.label}: ${Number(ctx.parsed).toLocaleString('es-CO')} (${(ctx.parsed / totalSent * 100).toFixed(1)}%)`,
-                        },
-                    },
-                },
-            },
+            }, options: {
+                responsive: false, cutout: '68%', plugins: {
+                    legend: { display: false }, tooltip: {
+                        backgroundColor: _s.theme === 'light' ? '#fff' : '#18181b',
+                        borderColor: _s.theme === 'light' ? '#e2e6ec' : '#2a303a', borderWidth: 1,
+                        titleColor: _s.theme === 'light' ? '#111827' : '#f0f2f5',
+                        bodyColor: _s.theme === 'light' ? '#4b5563' : '#8b95a6',
+                        titleFont: { family: 'Syne', weight: '700', size: 12 }, bodyFont: { family: 'DM Mono', size: 11 },
+                        padding: 10, cornerRadius: 8,
+                        callbacks: { label: ctx => ` ${ctx.label}: ${Number(ctx.parsed).toLocaleString('es-CO')} (${total > 0 ? (ctx.parsed / total * 100).toFixed(1) : 0}%)` },
+                    }
+                }
+            }
         });
 
-        // Render leyenda del donut
-        const legendEl = document.getElementById('donut-legend-list');
-        if (legendEl) {
-            const tot = segments.reduce((a, s) => a + s.value, 0) || 1;
-            legendEl.innerHTML = segments.map(s => `
+        const leg = document.getElementById('donut-legend-list');
+        if (leg) {
+            const tot = segs.reduce((a, s) => a + s.value, 0) || 1;
+            leg.innerHTML = segs.map(s => `
         <div class="dli">
           <span class="dli-dot" style="background:${s.color}"></span>
           <span class="dli-name">${s.label}</span>
@@ -512,162 +598,187 @@ const ChartsModule = (() => {
         }
     }
 
-    // → React: <AreaChart label color data />
-    function _renderAreaChart(id, labels, data, color, cc) {
-        const canvas = document.getElementById(id);
-        if (!canvas) return;
-        _state.instances[id] = new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Abiertos', data,
-                    borderColor: color, backgroundColor: _rgba(color, .10),
-                    fill: true, tension: .4, borderWidth: 2,
-                    pointRadius: 2, pointBackgroundColor: color,
-                }],
-            },
-            options: _baseOptions(cc),
+    function _renderArea(id, labels, data, color, cc) {
+        const cv = document.getElementById(id); if (!cv) return;
+        _s.charts[id] = new Chart(cv.getContext('2d'), {
+            type: 'line', data: {
+                labels, datasets: [
+                    {
+                        label: 'Abiertos', data, borderColor: color, backgroundColor: _rgba(color, .10),
+                        fill: true, tension: .4, borderWidth: 2, pointRadius: 2, pointBackgroundColor: color
+                    },
+                ]
+            }, options: _baseOpts(cc)
         });
     }
 
-    // → React: <IssuesChart bounce complaint />
-    function _renderIssuesChart(id, labels, bounceArr, complaintArr, cc) {
-        const canvas = document.getElementById(id);
-        if (!canvas) return;
-        _state.instances[id] = new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [
-                    {
-                        label: 'Bounce', data: bounceArr,
-                        borderColor: cc.red, backgroundColor: _rgba(cc.red, .08),
-                        fill: true, tension: .4, borderWidth: 2, pointRadius: 2,
-                        pointBackgroundColor: cc.red,
-                    },
-                    {
-                        label: 'Complaint', data: complaintArr,
-                        borderColor: cc.orange, backgroundColor: _rgba(cc.orange, .08),
-                        fill: true, tension: .4, borderWidth: 1.5, borderDash: [4, 3],
-                        pointRadius: 2, pointBackgroundColor: cc.orange,
-                    },
-                ],
-            },
-            options: _baseOptions(cc),
+    function _renderIssues(id, { labels, bounceArr, complaintArr }, cc) {
+        const cv = document.getElementById(id); if (!cv) return;
+        _s.charts[id] = new Chart(cv.getContext('2d'), {
+            type: 'line', data: {
+                labels, datasets: [
+                    { label: 'Bounce', data: bounceArr, borderColor: cc.red, backgroundColor: _rgba(cc.red, .08), fill: true, tension: .4, borderWidth: 2, pointRadius: 2 },
+                    { label: 'Complaint', data: complaintArr, borderColor: cc.orange, backgroundColor: _rgba(cc.orange, .08), fill: true, tension: .4, borderWidth: 1.5, borderDash: [4, 3], pointRadius: 2 },
+                ]
+            }, options: _baseOpts(cc)
         });
     }
 
-    // → React: <DomainsTable rows maxCount />
-    function _renderDomainsTable(entries, total) {
-        const table = document.getElementById('domains-table');
-        if (!table) return;
+    function _renderDomainTable(entries, total) {
+        const t = document.getElementById('domains-table'); if (!t) return;
+        const tbody = t.querySelector('tbody'); if (!tbody) return;
         const max = entries[0]?.[1] || 1;
-        table.innerHTML = `
-      <thead>
-        <tr>
-          <th style="width:32px">#</th>
-          <th>Dominio</th>
-          <th>Envíos</th>
-          <th>%</th>
-          <th class="col-bar">Volumen</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${entries.map(([dom, cnt], i) => `
+        tbody.innerHTML = entries.length
+            ? entries.map(([dom, cnt], i) => `
           <tr>
-            <td class="t-mono" style="color:var(--text3)">${i + 1}</td>
+            <td class="t-mono" style="color:var(--text3);width:32px">${i + 1}</td>
             <td class="col-email">@${dom}</td>
             <td class="t-mono">${Number(cnt).toLocaleString('es-CO')}</td>
-            <td class="t-mono" style="color:var(--text3)">${(cnt / total * 100).toFixed(1)}%</td>
+            <td class="t-mono" style="color:var(--text3)">${total > 0 ? (cnt / total * 100).toFixed(1) : 0}%</td>
             <td class="col-bar">
               <div class="mini-bar-track">
                 <div class="mini-bar-fill" style="width:${(cnt / max * 100).toFixed(1)}%"></div>
               </div>
             </td>
-          </tr>`).join('')}
-      </tbody>`;
+          </tr>`).join('')
+            : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Sin datos para el período seleccionado</td></tr>';
     }
 
-    /* ─────────────────────────────────────────────────
-       §H  DOMAIN SELECTOR
-       ───────────────────────────────────────────────── */
+    /* ── Selector de dominio ── */
     function _populateDomainSelector(items) {
-        const sel = document.getElementById('an-domain');
-        if (!sel) return;
-        const current = _state.domain;
-        const domains = new Set();
+        const sel = document.getElementById('an-domain'); if (!sel) return;
+        const cur = _s.domain;
+        const doms = new Set();
         items.forEach(e => {
             const m = (e.email_to || '').match(/@([^\s>]+)/);
-            if (m) domains.add(m[1]);
+            if (m) doms.add(m[1]);
         });
-        const opts = ['<option value="">Todos los dominios</option>'];
-        [...domains].sort().forEach(d => {
-            opts.push(`<option value="${d}" ${d === current ? 'selected' : ''}>${d}</option>`);
-        });
-        sel.innerHTML = opts.join('');
+        sel.innerHTML = [
+            '<option value="">Todos los dominios</option>',
+            ...[...doms].sort().map(d => `<option value="${d}"${d === cur ? ' selected' : ''}>${d}</option>`),
+        ].join('');
     }
 
-    /* ─────────────────────────────────────────────────
-       §I  UTILITIES
-       ───────────────────────────────────────────────── */
-    function _chartColors() {
-        const light = _state.theme === 'light';
+    /* ── Skeleton loader ── */
+    function _showSkeletons() {
+        const c = document.getElementById('kpi-container');
+        if (c) c.innerHTML = Array(4).fill('<div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>').join('');
+    }
+
+    /* ══════════════════════════════════════════════
+       EXPORTACIÓN
+    ══════════════════════════════════════════════ */
+    function exportCSV() {
+        const items = _applyFilters(_s.rawItems);
+        if (!items.length) { AlertsModule?.showToast('Sin datos para exportar', 'warn'); return; }
+
+        const header = ['ID', 'Destinatario', 'Asunto', 'Estado', 'Fecha'];
+        const rows = items.map(e => [
+            e.id,
+            `"${(e.email_to || '').replace(/"/g, '""')}"`,
+            `"${(e.subject || '').replace(/"/g, '""')}"`,
+            e.status || '',
+            new Date(e.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+        ]);
+        const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+        _download(blob, `mailtrack-${_dateTag()}.csv`);
+        AlertsModule?.showToast('✓ CSV descargado', 'ok');
+        _closeExportMenu();
+    }
+
+    function exportExcel() {
+        const items = _applyFilters(_s.rawItems);
+        if (!items.length) { AlertsModule?.showToast('Sin datos para exportar', 'warn'); return; }
+
+        const kpis = _computeKPIs(items);
+        const rows = [
+            ['MailTrack — Reporte de Analítica'],
+            ['Generado:', new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })],
+            ['Período:', _s.period > 0 ? `Últimos ${_s.period} días` : 'Rango personalizado'],
+            ['Dominio:', _s.domain || 'Todos'],
+            [],
+            ['RESUMEN'],
+            ['Total enviados', kpis.total],
+            ['Entregados', kpis.delivered],
+            ['Bounce', kpis.bounce],
+            ['Abiertos', kpis.open],
+            ['Tasa de entrega', kpis.delivRate + '%'],
+            ['Bounce rate', kpis.bounceRate + '%'],
+            ['Open rate', kpis.openRate + '%'],
+            [],
+            ['DETALLE DE CORREOS'],
+            ['ID', 'Destinatario', 'Asunto', 'Estado', 'Fecha'],
+            ...items.map(e => [
+                e.id, e.email_to || '', e.subject || '', e.status || '',
+                new Date(e.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+            ]),
+        ];
+        const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Analítica"><Table>
+${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data></Cell>`).join('')}</Row>`).join('\n')}
+</Table></Worksheet></Workbook>`;
+
+        const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        _download(blob, `mailtrack-${_dateTag()}.xls`);
+        AlertsModule?.showToast('✓ Excel descargado', 'ok');
+        _closeExportMenu();
+    }
+
+    function _closeExportMenu() {
+        document.getElementById('btn-export')?.classList.remove('open');
+        document.getElementById('export-dropdown')?.classList.remove('open');
+    }
+
+    function _download(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function _dateTag() { return new Date().toISOString().slice(0, 10); }
+
+    /* ══════════════════════════════════════════════
+       UTILIDADES
+    ══════════════════════════════════════════════ */
+    function _colors() {
+        const l = _s.theme === 'light';
         return {
-            grid: light ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)',
-            tick: light ? '#6b7280' : '#52525b',
-            blue: light ? '#2563eb' : '#60a5fa',
-            green: light ? '#16a34a' : '#4ade80',
-            red: light ? '#dc2626' : '#f87171',
-            orange: light ? '#ea580c' : '#fb923c',
-            yellow: light ? '#d97706' : '#fbbf24',
+            grid: l ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)',
+            tick: l ? '#6b7280' : '#52525b',
+            blue: l ? '#2563eb' : '#60a5fa',
+            green: l ? '#16a34a' : '#4ade80',
+            red: l ? '#dc2626' : '#f87171',
+            orange: l ? '#ea580c' : '#fb923c',
+            yellow: l ? '#d97706' : '#fbbf24',
         };
     }
 
-    function _rgba(hex, alpha) {
+    function _rgba(hex, a) {
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r},${g},${b},${alpha})`;
+        return `rgba(${r},${g},${b},${a})`;
     }
 
-    function _destroyAll() {
-        Object.values(_state.instances).forEach(c => { try { c.destroy(); } catch { } });
-        _state.instances = {};
+    function _destroyCharts() {
+        Object.values(_s.charts).forEach(c => { try { c.destroy(); } catch { /* ignore */ } });
+        _s.charts = {};
     }
 
-    function _showLoading() {
-        const body = document.getElementById('an-content');
-        if (body) body.innerHTML = '<div class="u-loading">Cargando analítica…</div>';
-    }
-
-    /* ─────────────────────────────────────────────────
-       PUBLIC API
-       ───────────────────────────────────────────────── */
-    return {
-        init,
-        loadFromAPI,
-        renderAll,
-        setPeriod,
-        setDomain,
-        setTheme,
-        DEMO_DATA,
-    };
+    /* ══════════════════════════════════════════════
+       API PÚBLICA
+    ══════════════════════════════════════════════ */
+    return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel };
 
 })();
 
-
-/* ═══════════════════════════════════════════════════
-   BOOT — se ejecuta al cargar la página
-   En producción: pasar token desde backend session
-   ═══════════════════════════════════════════════════ */
+/* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('ses_token') || '';
-
-    ChartsModule.init({ token });
-
-    // Intentar API real; si falla, caer a demo data automáticamente
-    ChartsModule.loadFromAPI().catch(() => {
-        // loadFromAPI ya maneja el fallback internamente
-    });
+    ChartsModule.init();
+    ChartsModule.loadFromAPI().catch(() => { /* loadFromAPI maneja el fallback internamente */ });
 });
