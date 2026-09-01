@@ -508,16 +508,17 @@ const ChartsModule = (() => {
 
     function _baseOpts(cc) {
         const light = _s.theme === 'light';
+        const cs = getComputedStyle(document.documentElement);
         return {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: light ? '#fff' : '#18181b',
-                    borderColor: light ? '#e2e6ec' : '#2a303a', borderWidth: 1,
-                    titleColor: light ? '#111827' : '#f0f2f5',
-                    bodyColor: light ? '#4b5563' : '#8b95a6',
+                    backgroundColor: cs.getPropertyValue('--surface').trim() || (light ? '#fff' : '#18181b'),
+                    borderColor: cs.getPropertyValue('--border2').trim() || (light ? '#e2e6ec' : '#2a303a'), borderWidth: 1,
+                    titleColor: cs.getPropertyValue('--text').trim() || (light ? '#111827' : '#f0f2f5'),
+                    bodyColor: cs.getPropertyValue('--text2').trim() || (light ? '#4b5563' : '#8b95a6'),
                     titleFont: { family: 'Syne', weight: '700', size: 12 },
                     bodyFont: { family: 'DM Mono', size: 11 },
                     padding: 10, cornerRadius: 8,
@@ -609,7 +610,7 @@ const ChartsModule = (() => {
                     borderColor: _s.theme === 'light' ? '#fff' : '#0d0f12', borderWidth: 3, hoverOffset: 6
                 }],
             }, options: {
-                responsive: false, cutout: '68%', plugins: {
+                responsive: true, cutout: '68%', plugins: {
                     legend: { display: false }, tooltip: {
                         backgroundColor: _s.theme === 'light' ? '#fff' : '#18181b',
                         borderColor: _s.theme === 'light' ? '#e2e6ec' : '#2a303a', borderWidth: 1,
@@ -758,7 +759,7 @@ const ChartsModule = (() => {
           <span class="emails-table-count">${items.length.toLocaleString('es-CO')}</span>
           <span class="emails-table-sub">Pág. ${p} / ${pages}</span>
         </div>
-        <div style="overflow-x:auto">
+        <div class="table-scroll-wrap">
           <table class="emails-action-table" id="emails-action-table">
             <thead>
               <tr>
@@ -819,7 +820,7 @@ const ChartsModule = (() => {
     /* ── Skeleton loader ── */
     function _showSkeletons() {
         const c = document.getElementById('kpi-container');
-        if (c) c.innerHTML = Array(4).fill('<div class="kpi-card"><div class="u-skeleton"></div></div>').join('');
+        if (c) c.innerHTML = Array(4).fill('<div class="kpi-card"><div class="u-skeleton" role="status" aria-label="Cargando métrica"></div></div>').join('');
     }
 
     /* ══════════════════════════════════════════════

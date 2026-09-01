@@ -4,7 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
-  <title>Local Correos</title>
+  <meta name="theme-color" content="#07080a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>MailTrack - AWS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
@@ -231,7 +234,7 @@
       font-weight: 700;
       font-family: var(--display);
       letter-spacing: -.01em;
-      transition: opacity .15s, transform .1s;
+      transition: opacity var(--t), transform var(--t);
       box-shadow: 0 4px 20px rgba(74, 222, 128, .25);
     }
 
@@ -636,7 +639,7 @@
       font-size: 12px;
       font-weight: 500;
       text-align: left;
-      transition: background .1s, color .1s;
+      transition: background var(--t), color var(--t);
       margin-bottom: 1px;
     }
 
@@ -728,7 +731,7 @@
       border-radius: 5px;
       padding: 3px 8px;
       font-size: 10px;
-      transition: all .15s;
+      transition: all var(--t);
     }
 
     .btn-logout:hover {
@@ -744,7 +747,7 @@
       width: 26px;
       height: 26px;
       font-size: 13px;
-      transition: all .15s;
+      transition: all var(--t);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -800,7 +803,7 @@
       color: var(--text);
       font-size: 12px;
       outline: none;
-      transition: border-color .15s, box-shadow .15s;
+      transition: border-color var(--t), box-shadow var(--t);
     }
 
     .search-wrap input:focus {
@@ -838,7 +841,7 @@
       font-size: 11px;
       outline: none;
       height: 30px;
-      transition: border-color .15s;
+      transition: border-color var(--t);
     }
 
     .fsel:focus {
@@ -869,7 +872,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all .15s;
+      transition: all var(--t);
     }
 
     .refresh-btn:hover {
@@ -920,6 +923,60 @@
       overflow-y: auto
     }
 
+    /* Email skeleton loader */
+    .email-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .email-skeleton-row {
+      display: grid;
+      grid-template-columns: 16px 1fr 58px 86px;
+      align-items: center;
+      padding: 0 12px;
+      min-height: 54px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .email-skeleton-row .sk-flag {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--surface3);
+    }
+    .email-skeleton-row .sk-main {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .email-skeleton-row .sk-line {
+      height: 10px;
+      border-radius: 4px;
+      background: var(--surface3);
+      animation: shimmer 1.5s infinite;
+    }
+    .email-skeleton-row .sk-line.sk-to {
+      width: 60%;
+    }
+    .email-skeleton-row .sk-line.sk-subject {
+      width: 80%;
+    }
+    .email-skeleton-row .sk-date {
+      width: 40px;
+      height: 10px;
+      border-radius: 4px;
+      background: var(--surface3);
+      animation: shimmer 1.5s infinite;
+    }
+    .email-skeleton-row .sk-status {
+      width: 50px;
+      height: 18px;
+      border-radius: 10px;
+      background: var(--surface3);
+      animation: shimmer 1.5s infinite;
+      justify-self: end;
+    }
+
     .email-row {
       display: grid;
       grid-template-columns: 16px 1fr 58px 86px;
@@ -928,7 +985,7 @@
       min-height: 54px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
-      transition: background .08s;
+      transition: background var(--t);
       position: relative;
     }
 
@@ -941,7 +998,7 @@
       width: 2px;
       border-radius: 1px;
       background: transparent;
-      transition: background .15s;
+      transition: background var(--t);
     }
 
     .email-row:hover {
@@ -968,8 +1025,8 @@
     }
 
     .flag {
-      width: 5px;
-      height: 5px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%
     }
 
@@ -1210,7 +1267,8 @@
       border-radius: var(--r);
       overflow: hidden;
       border: 1px solid var(--border2);
-      background: #fff
+      background: #fff;
+      max-height: 600px;
     }
 
     .content-frame iframe {
@@ -1337,13 +1395,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 10px 14px;
       cursor: pointer;
-      padding: 8px 11px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
       background: var(--surface2);
-      transition: background .12s;
-      user-select: none
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: background var(--t);
     }
 
     .events-header:hover {
@@ -1375,9 +1432,9 @@
     }
 
     .events-chevron {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text3);
-      transition: transform .2s
+      transition: transform var(--t);
     }
 
     .events-chevron.open {
@@ -1386,7 +1443,7 @@
 
     .events-body {
       overflow: hidden;
-      transition: max-height .3s ease
+      transition: max-height var(--t);
     }
 
     .events-body.collapsed {
@@ -2143,13 +2200,32 @@
       opacity: 0;
       transform: translateY(5px);
       transition: opacity .25s, transform .25s;
-      pointer-events: none;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, .4)
+      pointer-events: auto;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
     }
 
     .refresh-toast.show {
       opacity: 1;
       transform: translateY(0)
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 14px;
+      padding: 0;
+      line-height: 1;
+      cursor: pointer;
+      transition: color .15s ease;
+    }
+
+    .toast-close:hover {
+      color: var(--text);
     }
 
     .loading {
@@ -2166,8 +2242,7 @@
       font-size: 12px
     }
   </style>
-  <!-- Chart.js — migración futura: npm install chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Chart.js loaded by analytics.html when needed -->
 </head>
 
 <body>
@@ -2339,7 +2414,7 @@
           </div>
           <div class="split-detail" id="split-detail">
             <div class="detail-empty">
-              <div class="de-icon">✦</div>
+              <div class="de-icon">📬</div>
               <p>Selecciona un correo para ver el detalle</p>
             </div>
           </div>
@@ -2375,7 +2450,10 @@
   </div>
 
   <!-- TOAST -->
-  <div class="refresh-toast" id="refresh-toast">✓ Actualizado</div>
+  <div class="refresh-toast" id="refresh-toast">
+    <span>✓ Actualizado</span>
+    <button class="toast-close" onclick="this.parentElement.classList.remove('show')" title="Cerrar">✕</button>
+  </div>
 
   <!-- PDF MODAL -->
   <div class="pdf-modal-overlay" id="pdf-modal" onclick="closePdfModal(event)">
@@ -2496,7 +2574,23 @@
       const from = document.getElementById('q-from').value;
       const to = document.getElementById('q-to').value;
       const list = document.getElementById('email-list');
-      list.innerHTML = '<div class="loading">Cargando…</div>';
+      
+      // Show skeleton loader
+      list.innerHTML = `
+        <div class="email-skeleton">
+          ${Array(6).fill(`
+            <div class="email-skeleton-row">
+              <div class="sk-flag"></div>
+              <div class="sk-main">
+                <div class="sk-line sk-to"></div>
+                <div class="sk-line sk-subject"></div>
+              </div>
+              <div class="sk-date"></div>
+              <div class="sk-status"></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
 
       try {
         let data;

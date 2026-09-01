@@ -139,10 +139,10 @@
         Muestra skeletons durante la carga inicial -->
         <section aria-label="Métricas principales">
           <div class="kpi-row" id="kpi-container">
-            <div class="kpi-card"><div class="u-skeleton"></div></div>
-            <div class="kpi-card"><div class="u-skeleton"></div></div>
-            <div class="kpi-card"><div class="u-skeleton"></div></div>
-            <div class="kpi-card"><div class="u-skeleton"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" role="status" aria-label="Cargando métrica"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" role="status" aria-label="Cargando métrica"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" role="status" aria-label="Cargando métrica"></div></div>
+            <div class="kpi-card"><div class="u-skeleton" role="status" aria-label="Cargando métrica"></div></div>
           </div>
         </section>
 
@@ -257,20 +257,22 @@
                   <div class="chart-card-sub">Volumen de envíos por dominio de destino</div>
                 </div>
               </div>
-              <table id="domains-table" class="an-table" aria-label="Top dominios">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Dominio</th>
-                    <th>Envíos</th>
-                    <th>%</th>
-                    <th class="col-bar">Volumen</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td colspan="5" class="u-loading">Cargando…</td></tr>
-                </tbody>
-              </table>
+              <div class="table-scroll-wrap">
+                <table id="domains-table" class="an-table" aria-label="Top dominios">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Dominio</th>
+                      <th>Envíos</th>
+                      <th>%</th>
+                      <th class="col-bar">Volumen</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="5" class="u-loading">Cargando…</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
