@@ -380,6 +380,7 @@ const ChartsModule = (() => {
         _renderArea('chart-opens', series.labels, series.openArr, cc.yellow, cc);
         _renderIssues('chart-issues', series, cc);
         _renderDomainTable(domains, filtered.length);
+        _renderEmailsTable(filtered);     // tabla de correos individuales con acciones
     }
 
     /* ── Filtros ── */
@@ -675,6 +676,111 @@ const ChartsModule = (() => {
         });
     }
 
+
+    /* ── Tabla de correos individuales con botones de acción ──
+       → React: <EmailsTable items={filtered} onAction={ActionsModule} />
+       Renderiza los correos filtrados con paginación y botones
+       de reenviar / eliminar / bloquear que delegan a actions.js. */
+    function _renderEmailsTable(items) {
+        const container = document.getElementById('emails-action-container');
+        if (!container) return;
+
+        const PAGE_SIZE = 20;
+        let page = 1;
+
+        function render(p) {
+            page = p;
+            const start = (p - 1) * PAGE_SIZE;
+            const slice = items.slice(start, start + PAGE_SIZE);
+            const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+            const TZ = 'America/Bogota';
+
+            const statusInfo = st => {
+                const s = (st || '').toLowerCase();
+                if (s === 'delivery' || s === 'delivered') return { cls: 's-delivered', label: 'Entregado' };
+                if (s === 'bounce') return { cls: 's-bounce', label: 'Bounce' };
+                if (s === 'open') return { cls: 's-open', label: 'Abierto' };
+                if (s === 'complaint') return { cls: 's-complaint', label: 'Queja' };
+                if (s === 'send') return { cls: 's-send', label: 'Enviado' };
+                return { cls: 's-other', label: st || '—' };
+            };
+
+            const rows = slice.map(item => {
+                const { cls, label } = statusInfo(item.status);
+                const date = new Date(item.created_at).toLocaleDateString('es-CO', {
+                    day: '2-digit', month: 'short', year: 'numeric', timeZone: TZ,
+                });
+                const isBounce = (item.status || '').toLowerCase() === 'bounce';
+                return `
+          <tr id="email-row-${item.id}" data-id="${item.id}">
+            <td class="em-to">${item.email_to || '—'}</td>
+            <td class="em-subject">${item.subject || '—'}</td>
+            <td><span class="em-status ${cls}"><span class="em-status-dot"></span>${label}</span></td>
+            <td class="em-date">${date}</td>
+            <td>
+              <div class="em-actions">
+                <button class="em-btn btn-resend"
+                  title="Reenviar correo"
+                  onclick="ActionsModule.resend(${item.id}, '${(item.email_to || '').replace(/'/g, "\'")}', this)">
+                  <span>↺</span>
+                </button>
+                <button class="em-btn btn-delete"
+                  title="Eliminar correo"
+                  onclick="ActionsModule.confirmDelete(${item.id}, '${(item.email_to || '').replace(/'/g, "\'")}', this)">
+                  <span>✕</span>
+                </button>
+                <button class="em-btn btn-block${isBounce ? ' active' : ''}"
+                  title="${isBounce ? 'Ya en bounce — bloquear destinatario' : 'Enviar a lista de bloqueados'}"
+                  onclick="ActionsModule.confirmBlock(${item.id}, '${(item.email_to || '').replace(/'/g, "\'")}', this)">
+                  <span>⊘</span>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+            }).join('');
+
+            // Pagination controls
+            const pgBtns = () => {
+                const parts = [];
+                parts.push(`<button class="pg-btn" ${p <= 1 ? 'disabled' : ''} onclick="window._emailTablePage(${p - 1})">‹</button>`);
+                const lo = Math.max(1, p - 2), hi = Math.min(pages, p + 2);
+                if (lo > 1) parts.push(`<button class="pg-btn" onclick="window._emailTablePage(1)">1</button>${lo > 2 ? '<span class="pg-info">…</span>' : ''}`);
+                for (let i = lo; i <= hi; i++) parts.push(`<button class="pg-btn${i === p ? ' active' : ''}" onclick="window._emailTablePage(${i})">${i}</button>`);
+                if (hi < pages) parts.push(`${hi < pages - 1 ? '<span class="pg-info">…</span>' : ''}<button class="pg-btn" onclick="window._emailTablePage(${pages})">${pages}</button>`);
+                parts.push(`<button class="pg-btn" ${p >= pages ? 'disabled' : ''} onclick="window._emailTablePage(${p + 1})">›</button>`);
+                parts.push(`<span class="pg-info">${start + 1}–${Math.min(start + PAGE_SIZE, items.length)} de ${items.length}</span>`);
+                return parts.join('');
+            };
+
+            container.innerHTML = `
+        <div class="emails-table-header">
+          <span class="emails-table-title">Correos del período</span>
+          <span class="emails-table-count">${items.length.toLocaleString('es-CO')}</span>
+          <span class="emails-table-sub">Pág. ${p} / ${pages}</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="emails-action-table" id="emails-action-table">
+            <thead>
+              <tr>
+                <th>Destinatario</th>
+                <th>Asunto</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th class="th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="5" class="u-loading">Sin correos en este período</td></tr>'}</tbody>
+          </table>
+        </div>
+        ${pages > 1 ? `<div class="emails-pagination">${pgBtns()}</div>` : ''}`;
+
+            // Expose pager globally so inline onclick works
+            window._emailTablePage = p2 => render(p2);
+        }
+
+        render(1);
+    }
+
     function _renderDomainTable(entries, total) {
         const t = document.getElementById('domains-table'); if (!t) return;
         const tbody = t.querySelector('tbody'); if (!tbody) return;
@@ -824,6 +930,12 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
     /* ══════════════════════════════════════════════
        API PÚBLICA
     ══════════════════════════════════════════════ */
+    /* Remove an item from rawItems (called by actions.js after delete) */
+    function removeItem(id) {
+        const idx = _s.rawItems.findIndex(e => String(e.id) === String(id));
+        if (idx !== -1) { _s.rawItems.splice(idx, 1); _rerender(); }
+    }
+
     /* Expose read-only snapshot for reports.js */
     function getSnapshot() {
         const filtered = _applyFilters(_s.rawItems);
@@ -839,7 +951,7 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
         };
     }
 
-    return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel, getSnapshot };
+    return { init, loadFromAPI, renderAll, setPeriod, setTheme, exportCSV, exportExcel, getSnapshot, removeItem };
 
 })();
 

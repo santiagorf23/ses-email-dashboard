@@ -15,28 +15,28 @@
 
 <body>
   <!-- ════════════════════════════════════════════════════
-       LAYOUT RAÍZ: sidebar fijo + columna de contenido
-       ════════════════════════════════════════════════════ -->
+      LAYOUT RAÍZ: sidebar fijo + columna de contenido
+  ════════════════════════════════════════════════════ -->
   <div class="an-page">
 
     <!-- Overlay oscuro para cerrar sidebar en móvil -->
     <div id="sidebar-overlay" class="an-sidebar-overlay"></div>
 
     <!-- ── SIDEBAR ──────────────────────────────────────
-         Relleno por charts.js → _buildSidebar()
-         Contiene: brand, nav, period pills, alert config, footer
-         ─────────────────────────────────────────────── -->
+      Relleno por charts.js → _buildSidebar()
+      Contiene: brand, nav, period pills, alert config, footer
+    ─────────────────────────────────────────────── -->
     <aside id="an-sidebar" class="an-sidebar" aria-label="Menú lateral"></aside>
 
     <!-- ── ÁREA DE CONTENIDO ────────────────────────────
-         Flex column: topbar fija + body scrollable
-         ─────────────────────────────────────────────── -->
+        Flex column: topbar fija + body scrollable
+    ────────────────────────────────────────────── -->
     <div class="an-content-area">
 
       <!-- TOPBAR ───────────────────────────────────────
-           Controles de filtro y acciones rápidas.
-           En móvil muestra hamburguesa + título.
-           ─────────────────────────────────────────── -->
+          Controles de filtro y acciones rápidas.
+          En móvil muestra hamburguesa + título.
+      ─────────────────────────────────────────── -->
       <header class="an-topbar" role="banner">
 
         <!-- Hamburguesa visible solo en móvil -->
@@ -122,21 +122,21 @@
       </header>
 
       <!-- BODY SCROLLABLE ──────────────────────────────
-           Todas las secciones de contenido van aquí.
-           ─────────────────────────────────────────── -->
+          Todas las secciones de contenido van aquí.
+      ─────────────────────────────────────────── -->
       <main class="an-body" id="an-body" role="main">
 
         <!-- § AlertBanner
-             Renderizado por alerts.js → AlertsModule.render()
-             Se oculta por defecto con is-hidden    -->
+        Renderizado por alerts.js → AlertsModule.render()
+        Se oculta por defecto con is-hidden    -->
         <section id="alert-container"
           aria-label="Alertas de entregabilidad" aria-live="polite">
           <div class="an-alert is-hidden" aria-hidden="true"></div>
         </section>
 
         <!-- § KPI Cards
-             Renderizado por charts.js → _renderKPIs()
-             Muestra skeletons durante la carga inicial -->
+        Renderizado por charts.js → _renderKPIs()
+        Muestra skeletons durante la carga inicial -->
         <section aria-label="Métricas principales">
           <div class="kpi-row" id="kpi-container">
             <div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>
@@ -275,6 +275,23 @@
           </div>
         </section>
 
+        <!-- § Tabla de correos con acciones
+        Renderizada por charts.js → _renderEmailsTable()
+        Acciones (reenviar/eliminar/bloquear) delegadas a actions.js -->
+        <section aria-label="Correos del período">
+          <div class="chart-row r-1">
+            <div class="chart-card">
+              <div id="emails-action-container">
+                <!-- Relleno dinámicamente por _renderEmailsTable() -->
+                <div class="emails-table-header">
+                  <span class="emails-table-title">Correos del período</span>
+                </div>
+                <div class="u-loading">Cargando correos…</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main><!-- /an-body -->
     </div><!-- /an-content-area -->
   </div><!-- /an-page -->
@@ -290,6 +307,7 @@
   -->
   <script src="js/alerts.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/actions.js"></script>
   <script src="js/reports.js"></script>
   <script>
     (function () {
