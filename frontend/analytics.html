@@ -301,10 +301,12 @@
 
   <!--
     SCRIPTS — orden obligatorio:
-    1. alerts.js   → define AlertsModule (sin dependencias)
-    2. charts.js   → define ChartsModule, usa AlertsModule
-    3. Inline       → solo redirige si no hay sesión
+    1. config.js    → define CONFIG (configuración centralizada)
+    2. alerts.js    → define AlertsModule (sin dependencias)
+    3. charts.js    → define ChartsModule, usa AlertsModule
+    4. Inline       → solo redirige si no hay sesión
   -->
+  <script src="js/config.js"></script>
   <script src="js/alerts.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/actions.js"></script>

@@ -1,11 +1,14 @@
 import os
 import sys
+import logging
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -63,9 +66,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None or username not in USERS:
+            logger.warning("Token inválido o usuario no encontrado: %s", username)
             raise credentials_exception
         return USERS[username]
-    except JWTError:
+    except JWTError as e:
+        logger.warning("Error decodificando token: %s", e)
         raise credentials_exception
 
 
@@ -73,7 +78,9 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = USERS.get(form_data.username)
     if not user or not verify_password(form_data.password, user["hashed_password"]):
+        logger.warning("Login fallido para usuario: %s", form_data.username)
         raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
+    logger.info("Login exitoso para usuario: %s", form_data.username)
     token = create_token({"sub": user["username"]})
     return {"access_token": token, "token_type": "bearer", "full_name": user["full_name"]}
 

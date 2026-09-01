@@ -2357,8 +2357,9 @@
     </div>
   </div>
 
+  <script src="js/config.js"></script>
   <script>
-    const API = 'http://localhost:8000/api';
+    const API = CONFIG.API_BASE_URL;
     let token = localStorage.getItem('ses_token') || '';
     let currentPage = 1;
     let searchTimer;

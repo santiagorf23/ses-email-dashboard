@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from typing import Optional
-from datetime import date
 import json
+import logging
+from typing import Optional, Any
+from datetime import date
+
+from fastapi import APIRouter, Depends, Query, HTTPException
 
 from db.database import get_conn
 from models.schemas import (
@@ -10,7 +12,30 @@ from models.schemas import (
 )
 from routers.auth import get_current_user
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+
+def _parse_json_field(value: Any) -> Any:
+    """Parsea un campo JSON de forma segura, devolviendo el valor original si falla."""
+    if not isinstance(value, str):
+        return value
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        logger.warning("No se pudo parsear campo JSON: %s", value[:100])
+        return value
+
+
+def _parse_events(rows: list) -> list[EmailEvent]:
+    """Convierte filas de eventos en modelos EmailEvent con JSON parseado."""
+    events = []
+    for row in rows:
+        e = dict(row)
+        e["event_data"] = _parse_json_field(e.get("event_data"))
+        events.append(EmailEvent(**e))
+    return events
 
 
 @router.get("", response_model=PaginatedEmails)
@@ -28,8 +53,8 @@ async def list_emails(
     """Lista paginada de correos con filtros."""
     offset = (page - 1) * per_page
 
-    conditions = []
-    params = []
+    conditions: list[str] = []
+    params: list[Any] = []
     idx = 1
 
     # Búsqueda por destinatario
@@ -173,7 +198,6 @@ async def list_blocked(
     return [BlockedEmail(**dict(r)) for r in rows]
 
 
-
 @router.get("/search", response_model=PaginatedEmails)
 async def search_emails(
     q: str = Query(..., min_length=1),
@@ -226,6 +250,7 @@ async def search_emails(
         page=page, per_page=per_page, pages=pages
     )
 
+
 @router.get("/{email_id}", response_model=EmailDetail)
 async def get_email(
     email_id: int,
@@ -259,22 +284,10 @@ async def get_email(
         ORDER BY created_at ASC
     """, email_id)
 
-    events = []
-    for er in event_rows:
-        e = dict(er)
-        if isinstance(e.get("event_data"), str):
-            try:
-                e["event_data"] = json.loads(e["event_data"])
-            except Exception:
-                pass
-        events.append(EmailEvent(**e))
+    events = _parse_events(event_rows)
 
     detail = dict(row)
-    if isinstance(detail.get("attachments"), str):
-        try:
-            detail["attachments"] = json.loads(detail["attachments"])
-        except Exception:
-            pass
+    detail["attachments"] = _parse_json_field(detail.get("attachments"))
     detail["events"] = events
     return EmailDetail(**detail)
 
@@ -292,13 +305,4 @@ async def get_email_events(
         ORDER BY created_at ASC
     """, email_id)
 
-    events = []
-    for r in rows:
-        e = dict(r)
-        if isinstance(e.get("event_data"), str):
-            try:
-                e["event_data"] = json.loads(e["event_data"])
-            except Exception:
-                pass
-        events.append(EmailEvent(**e))
-    return events
+    return _parse_events(rows)

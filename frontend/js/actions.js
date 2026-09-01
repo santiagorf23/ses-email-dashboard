@@ -29,8 +29,8 @@
 const ActionsModule = (() => {
 
     /* ── Configuración ───────────────────────────────── */
-    const API_BASE = 'http://localhost:8000/api';
-    const DEV_MODE = true;   // true → simula éxito si el endpoint no existe
+    const API_BASE = CONFIG ? CONFIG.API_BASE_URL : 'http://localhost:8000/api';
+    const DEV_MODE = false;   // false → usa endpoints reales del backend
     const TZ = 'America/Bogota';
 
     /* ── Helpers de fetch ────────────────────────────── */

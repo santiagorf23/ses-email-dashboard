@@ -20,7 +20,7 @@ const ChartsModule = (() => {
         dateFrom: null,
         dateTo: null,
         theme: localStorage.getItem('mt_theme') || 'dark',
-        apiBase: 'http://localhost:8000/api',
+        apiBase: CONFIG ? CONFIG.API_BASE_URL : 'http://localhost:8000/api',
         token: localStorage.getItem('ses_token') || '',
         charts: {},
         rawItems: [],

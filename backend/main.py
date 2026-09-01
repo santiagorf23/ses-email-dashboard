@@ -1,10 +1,18 @@
 import os
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from routers import emails, auth
 from db.database import init_pool, shutdown_pool
 import uvicorn
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="SES Mail Dashboard", version="1.0.0")
 
@@ -24,12 +32,16 @@ app.include_router(emails.router, prefix="/api/emails", tags=["emails"])
 
 @app.on_event("startup")
 async def startup():
+    logger.info("Iniciando SES Mail Dashboard...")
     await init_pool()
+    logger.info("Pool de conexiones inicializado")
 
 
 @app.on_event("shutdown")
 async def shutdown():
+    logger.info("Apagando SES Mail Dashboard...")
     await shutdown_pool()
+    logger.info("Pool de conexiones cerrado")
 
 
 @app.get("/api/health")
@@ -41,6 +53,7 @@ async def health():
             await conn.fetchval("SELECT 1")
         return {"status": "ok", "database": "connected"}
     except Exception as e:
+        logger.error("Health check falló: %s", e)
         return {"status": "degraded", "database": "disconnected", "error": str(e)}
 
 
