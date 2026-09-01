@@ -3,12 +3,13 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
   <title>Local Correos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
     :root {
       --bg: #07080a;
@@ -2277,6 +2278,7 @@
       <!-- INBOX -->
       <div id="view-inbox" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
         <div class="topbar">
+          <button class="btn-menu" onclick="toggleSidebar()" title="Menú" style="display:none;width:30px;height:30px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:16px;align-items:center;justify-content:center;flex-shrink:0;">☰</button>
           <span class="topbar-title">Correos enviados</span>
           <div class="search-wrap">
             <span class="search-icon">⌕</span>
@@ -2324,16 +2326,18 @@
             <h2>Lista de bloqueos</h2>
             <p>Direcciones marcadas por hard bounce o complaint. No recibirán correos.</p>
           </div>
-          <table class="blocked-table">
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Motivo</th>
-                <th>Fecha de bloqueo</th>
-              </tr>
-            </thead>
-            <tbody id="blocked-tbody"></tbody>
-          </table>
+          <div class="blocked-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+            <table class="blocked-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Motivo</th>
+                  <th>Fecha de bloqueo</th>
+                </tr>
+              </thead>
+              <tbody id="blocked-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -2836,11 +2840,30 @@
     // ── SIDEBAR TOGGLE ───────────────────────────────────
     function toggleSidebar() {
       const sb = document.querySelector('.sidebar');
-      const btn = document.getElementById('sb-toggle');
-      const collapsed = sb.classList.toggle('collapsed');
-      btn.textContent = collapsed ? '›' : '‹';
-      localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        // En móvil: abrir/cerrar drawer
+        sb.classList.toggle('open');
+      } else {
+        // En desktop: colapsar/expandir
+        const btn = document.getElementById('sb-toggle');
+        const collapsed = sb.classList.toggle('collapsed');
+        btn.textContent = collapsed ? '›' : '‹';
+        localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+      }
     }
+
+    // Cerrar sidebar al hacer clic fuera en móvil
+    document.addEventListener('click', (e) => {
+      const sb = document.querySelector('.sidebar');
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile && sb.classList.contains('open')) {
+        if (!sb.contains(e.target) && !e.target.closest('.btn-menu')) {
+          sb.classList.remove('open');
+        }
+      }
+    });
 
     // ── THEME TOGGLE ──────────────────────────────────────
     function toggleTheme() {

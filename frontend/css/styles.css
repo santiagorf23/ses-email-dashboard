@@ -866,3 +866,298 @@ a           { color: inherit; text-decoration: none; }
   .em-date            { display: none; }
   .emails-action-table th:nth-child(4) { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════
+   §19  INDEX.HTML RESPONSIVE (Inbox Page)
+   ═══════════════════════════════════════════════════ */
+
+/* 768px: Sidebar drawer, split-view adjustments */
+@media (max-width: 768px) {
+  /* Sidebar as drawer */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+    width: 240px !important;
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, .55);
+  }
+  .sidebar.collapsed {
+    width: 54px !important;
+  }
+
+  /* Show all text when sidebar is open */
+  .sidebar.open .sb-tagline,
+  .sidebar.open .sb-wordmark,
+  .sidebar.open .sb-metrics,
+  .sidebar.open .sb-health,
+  .sidebar.open .nav-group-label,
+  .sidebar.open .ni-label,
+  .sidebar.open .ni-count,
+  .sidebar.open .sf-info,
+  .sidebar.open .btn-logout,
+  .sidebar.open .sf-role {
+    display: flex !important;
+  }
+  .sidebar.open .sb-brand {
+    justify-content: flex-start;
+    padding: 14px 14px 12px;
+  }
+  .sidebar.open .sb-logo {
+    margin: 0;
+  }
+  .sidebar.open .nav-item {
+    justify-content: flex-start;
+    padding: 6px 9px;
+  }
+
+  /* Show hamburger button */
+  .btn-menu {
+    display: flex !important;
+  }
+
+  /* Main panel full width */
+  .main-panel {
+    width: 100%;
+  }
+
+  /* Split-view: stack vertically on mobile */
+  .split-view {
+    flex-direction: column;
+  }
+  .split-list {
+    width: 100%;
+    min-width: 0;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .split-detail {
+    min-height: 60vh;
+  }
+
+  /* Topbar: allow wrapping */
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .topbar-title {
+    display: none;
+  }
+  .topbar-filters {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  /* Search expand */
+  .search-wrap {
+    max-width: 100%;
+    flex: 1;
+  }
+
+  /* Detail panel padding */
+  .detail-panel {
+    padding: 12px 16px;
+  }
+
+  /* Blocked table scroll */
+  .blocked-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* PDF modal */
+  .pdf-modal {
+    width: 95vw;
+    height: 80vh;
+  }
+
+  /* Date inputs */
+  .fsel[type="date"] {
+    width: 100px;
+  }
+}
+
+/* 600px: KPIs single column, hide secondary elements */
+@media (max-width: 600px) {
+  /* Email row: hide date and status on small screens */
+  .email-row {
+    grid-template-columns: 16px 1fr 58px;
+  }
+  .er-date,
+  .er-status {
+    display: none;
+  }
+
+  /* Pagination compact */
+  .pagination {
+    padding: 6px 8px;
+  }
+  .pag-info {
+    font-size: 9px;
+  }
+
+  /* View content padding */
+  .view-content {
+    padding: 12px;
+  }
+
+  /* Login responsive */
+  .login-wrap {
+    width: 100%;
+    max-width: 340px;
+    padding: 0 16px;
+  }
+
+  /* Flag dots slightly larger */
+  .flag {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* 480px: Very small phones */
+@media (max-width: 480px) {
+  /* Email row: single column */
+  .email-row {
+    grid-template-columns: 16px 1fr;
+    padding: 0 8px;
+    min-height: 48px;
+  }
+  .er-flags {
+    display: none;
+  }
+
+  /* Modal padding */
+  .modal-body {
+    padding: 12px;
+  }
+  .modal-header {
+    padding: 12px 14px;
+  }
+  .modal-footer {
+    padding: 10px 14px;
+  }
+
+  /* Message ID */
+  .msg-id {
+    max-width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   §20  FOCUS-VISIBLE STATES (Accessibility)
+   ═══════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.nav-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--r-sm);
+}
+.asb-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--r-sm);
+}
+
+/* ═══════════════════════════════════════════════════
+   §21  PREFERS-REDUCED-MOTION (Accessibility)
+   ═══════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .sh-live::before {
+    animation: none;
+  }
+  .hbar-fill {
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   §22  CONSISTENT BORDER-RADIUS
+   ═══════════════════════════════════════════════════ */
+/* Override hardcoded border-radius values with CSS variables */
+.asb-collapse,
+.asb-theme-btn,
+.modal-close,
+.btn-logout,
+.btn-theme,
+.pag-btn,
+.em-btn {
+  border-radius: var(--r-sm) !important;
+}
+.kc-delta,
+.em-status,
+.an-alert-badge {
+  border-radius: var(--r) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   §23  SCROLLBAR FOR FIREFOX
+   ═══════════════════════════════════════════════════ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+/* ═══════════════════════════════════════════════════
+   §24  LIGHT THEME FIXES
+   ═══════════════════════════════════════════════════ */
+[data-theme="light"] input[type="date"].fsel {
+  color-scheme: light;
+}
+[data-theme="light"] .btn-modal-save {
+  color: #fff;
+}
+[data-theme="light"] .pdf-modal-body {
+  background: var(--surface2);
+}
+
+/* ═══════════════════════════════════════════════════
+   §25  PRINT STYLES
+   ═══════════════════════════════════════════════════ */
+@media print {
+  .sidebar,
+  .topbar,
+  .an-topbar,
+  .an-sidebar,
+  .pagination,
+  .btn-export,
+  .btn-pdf,
+  .refresh-btn {
+    display: none !important;
+  }
+  .main-panel,
+  .an-content-area {
+    width: 100% !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
