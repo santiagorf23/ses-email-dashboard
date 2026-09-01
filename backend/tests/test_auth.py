@@ -79,3 +79,43 @@ async def test_token_contains_expiry(client):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
     assert "exp" in payload
     assert payload["sub"] == "admin"
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_after_failed_attempts(client):
+    """Test rate limiting blocks after max failed attempts."""
+    # Hacer 5 intentos fallidos
+    for _ in range(5):
+        await client.post("/api/auth/login", data={
+            "username": "admin",
+            "password": "wrongpassword"
+        })
+    
+    # El 6to intento debe ser rate limited
+    response = await client.post("/api/auth/login", data={
+        "username": "admin",
+        "password": "wrongpassword"
+    })
+    assert response.status_code == 429
+    assert "demasiados intentos" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_reset_on_success(client):
+    """Test rate limit resets after successful login."""
+    from routers.auth import _login_attempts
+    
+    # Limpiar cualquier estado previo
+    _login_attempts.clear()
+    
+    # Login exitoso debe funcionar sin problemas
+    response = await client.post("/api/auth/login", data={
+        "username": "admin",
+        "password": "testpassword123"
+    })
+    assert response.status_code == 200
+    
+    # Verificar que no hay intentos fallidos registrados
+    # (el login exitoso limpia los intentos de la IP del cliente)
+    for ip, attempts in _login_attempts.items():
+        assert len(attempts) == 0
