@@ -1,5 +1,6 @@
 import os
-from datetime import datetime, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -8,18 +9,28 @@ from passlib.context import CryptContext
 
 router = APIRouter()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production-super-secret-key")
+# Fail fast si faltan secrets críticos
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    print("ERROR: SECRET_KEY no está configurado. Define la variable de entorno SECRET_KEY.", file=sys.stderr)
+    sys.exit(1)
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASSWORD:
+    print("ERROR: ADMIN_PASSWORD no está configurado. Define la variable de entorno ADMIN_PASSWORD.", file=sys.stderr)
+    sys.exit(1)
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# Simple hardcoded users — replace with DB lookup in production
+# Hardcoded users — reemplazar con DB lookup en producción
 USERS = {
     os.getenv("ADMIN_USER", "admin"): {
         "username": os.getenv("ADMIN_USER", "admin"),
-        "hashed_password": pwd_context.hash(os.getenv("ADMIN_PASSWORD", "admin123")),
+        "hashed_password": pwd_context.hash(ADMIN_PASSWORD),
         "full_name": "Administrador",
     }
 }
@@ -37,7 +48,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 

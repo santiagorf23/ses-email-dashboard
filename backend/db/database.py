@@ -1,12 +1,13 @@
 import os
+import sys
 from contextlib import asynccontextmanager
 import asyncpg
 from typing import AsyncGenerator
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://user:password@localhost:5432/ses_dashboard"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("ERROR: DATABASE_URL no está configurado. Define la variable de entorno DATABASE_URL.", file=sys.stderr)
+    sys.exit(1)
 
 _pool: asyncpg.Pool = None
 
@@ -34,3 +35,13 @@ async def close_pool():
     if _pool:
         await _pool.close()
         _pool = None
+
+
+async def init_pool():
+    """Inicializar el pool de conexiones al arrancar la app."""
+    await get_pool()
+
+
+async def shutdown_pool():
+    """Cerrar el pool de conexiones al apagar la app."""
+    await close_pool()

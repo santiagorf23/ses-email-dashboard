@@ -66,13 +66,16 @@ async def list_emails(
             "open":      "open",
             "click":     "click",
         }
-        event_type = status_map.get(status.lower(), status.lower())
-        # Se agrega como condición normal dentro del WHERE
+        event_type = status_map.get(status.lower())
+        if event_type is None:
+            raise HTTPException(status_code=400, detail=f"Status no válido: {status}")
         conditions.append(
             f"LOWER((SELECT event_type FROM email_events "
             f"WHERE email_send_id = es.id "
-            f"ORDER BY created_at DESC LIMIT 1)) = '{event_type}'"
+            f"ORDER BY created_at DESC LIMIT 1)) = ${idx}"
         )
+        params.append(event_type)
+        idx += 1
 
     # Construir cláusula WHERE completa
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
