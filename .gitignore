@@ -1,5 +1,26 @@
+# Environment files
 backend/.env
-backend/venv
-Dockerfile
+.env
+
+# Python
+backend/venv/
 __pycache__/
-docker-compose.yml
+*.pyc
+*.pyo
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Docker (solo el vacío del root)
+/Dockerfile
+
+# IDE
+.vscode/
+.idea/
+
+# Deep Work Plans (temporal)
+.dwp/
+
+# OS
+.DS_Store
+Thumbs.db
