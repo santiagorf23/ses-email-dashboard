@@ -11,20 +11,41 @@ ses-dashboard/
 ├── backend/
 │   ├── main.py               # Punto de entrada FastAPI
 │   ├── requirements.txt
-│   ├── Dockerfile
+│   ├── Dockerfile             # Multi-stage build, usuario no-root
+│   ├── .dockerignore
 │   ├── .env.example
+│   ├── pytest.ini             # Configuración de tests
 │   ├── db/
 │   │   └── database.py       # Pool de conexiones asyncpg
 │   ├── models/
 │   │   └── schemas.py        # Modelos Pydantic
-│   └── routers/
-│       ├── auth.py           # Login JWT
-│       └── emails.py         # Endpoints de correos
+│   ├── routers/
+│   │   ├── auth.py           # Login JWT
+│   │   └── emails.py         # Endpoints de correos
+│   └── tests/
+│       ├── conftest.py       # Fixtures de testing
+│       ├── test_auth.py      # Tests de autenticación
+│       ├── test_health.py    # Tests de health check
+│       └── test_emails.py    # Tests de endpoints de correo
 ├── frontend/
-│   └── index.html            # SPA completa (sin dependencias de build)
+│   ├── index.html            # SPA principal (login + inbox)
+│   ├── analytics.html        # Página de analíticas
+│   ├── css/
+│   │   └── styles.css
+│   └── js/
+│       ├── config.js         # Configuración centralizada
+│       ├── charts.js         # Gráficas y dashboard
+│       ├── alerts.js         # Sistema de alertas
+│       ├── actions.js        # Acciones sobre correos
+│       └── reports.js        # Generación de reportes PDF
 ├── database/
-│   └── init.sql              # Schema de referencia (no ejecutar en producción)
+│   └── init.sql              # Schema + datos de prueba
+├── scripts/
+│   └── deploy.sh             # Script de despliegue
+├── .agents/                  # Skills y agents de calidad
+├── Makefile                  # Comandos de despliegue
 ├── docker-compose.yml
+├── .env.example
 └── README.md
 ```
 
@@ -33,50 +54,55 @@ ses-dashboard/
 ## 🗄️ Estructura real de la base de datos
 
 ### Tabla: email_send
+
 ```sql
-CREATE TABLE email_send (
-    id              BIGSERIAL PRIMARY KEY,
-    message_id      VARCHAR(255) UNIQUE,
-    email_to        VARCHAR(255) NOT NULL,
-    subject         VARCHAR(255),
+CREATE TABLE IF NOT EXISTS email_send (
+    id              SERIAL PRIMARY KEY,
+    message_id      TEXT UNIQUE,
+    email_to        TEXT NOT NULL,
+    subject         TEXT,
     content         TEXT,
-    mime_type       VARCHAR(100),
-    email_from      VARCHAR(255),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    mime_type       TEXT,
+    email_from      TEXT,
     has_attachments BOOLEAN DEFAULT FALSE,
-    attachments     JSONB   -- metadatos de archivos adjuntos (PDF, etc.)
+    attachments     JSONB,
+    status          TEXT NOT NULL DEFAULT 'sent',
+    created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
-> ⚠️ La tabla email_send NO tiene columna status.
-> El estado se deriva dinámicamente del último evento en email_events.
+> El status se almacena directamente en la tabla y también se puede derivar
+> del último evento en email_events.
 
 ### Tabla: email_events
+
 ```sql
-CREATE TABLE email_events (
-    id            BIGSERIAL PRIMARY KEY,
-    email_send_id BIGINT REFERENCES email_send(id) ON DELETE CASCADE,
-    event_type    VARCHAR(50),   -- send | delivery | bounce | complaint | open | click
+CREATE TABLE IF NOT EXISTS email_events (
+    id            SERIAL PRIMARY KEY,
+    email_send_id INTEGER REFERENCES email_send(id) ON DELETE CASCADE,
+    event_type    TEXT,    -- send | delivery | bounce | complaint | open | click
     event_data    JSONB,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
 ### Tabla: email_block
+
 ```sql
-CREATE TABLE email_block (
-    id         BIGSERIAL PRIMARY KEY,
-    email      VARCHAR(255) UNIQUE,
-    reason     VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS email_block (
+    id         SERIAL PRIMARY KEY,
+    email      TEXT UNIQUE,
+    reason     TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
 ### Cómo se deriva el status
+
 El status visible en el dashboard es el event_type del último evento del correo:
 
-| Último evento  | Status mostrado |
-|----------------|----------------|
+| Último evento | Status mostrado |
+| -------------- | --------------- |
 | send           | Enviado         |
 | delivery       | Entregado       |
 | bounce         | Bounce          |
@@ -86,83 +112,84 @@ El status visible en el dashboard es el event_type del último evento del correo
 
 ---
 
-## 🚀 Inicio rápido (desarrollo local)
+## 🚀 Inicio rápido
 
-### 1. Configurar variables de entorno
+### Opción 1: Docker (recomendado)
 
 ```bash
-cd ses-dashboard/backend
+# 1. Configurar variables de entorno
 cp .env.example .env
-nano .env
+# Editar .env con tus valores (ver sección Variables de entorno)
+
+# 2. Iniciar todo
+make start
+# o
+./scripts/deploy.sh start
+
+# 3. Abrir en navegador
+# Frontend: http://localhost:8080
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 ```
 
-```env
-# Contraseñas con espacios: reemplazar espacio por %20
-DATABASE_URL=postgresql://usuario:contraseña@host:5432/email_service
-SECRET_KEY=genera-con-el-comando-de-abajo
-ADMIN_USER=admin
-ADMIN_PASSWORD=tu-contraseña-segura
-```
-
-Generar SECRET_KEY:
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 2. Instalar dependencias y levantar backend
+### Opción 2: Desarrollo local
 
 ```bash
-cd ses-dashboard/backend
+# 1. Configurar variables de entorno
+cd backend
+cp .env.example .env
+# Editar .env con tus valores
+
+# 2. Iniciar backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# Cargar .env y levantar (el export es importante)
 export $(cat .env | xargs) && uvicorn main:app --reload --port 8000
-```
 
-### 3. Servir el frontend
-
-En otra terminal:
-```bash
-cd ses-dashboard/frontend
+# 3. En otra terminal, iniciar frontend
+cd frontend
 python -m http.server 8088
+
+# 4. Abrir: http://localhost:8088
 ```
 
-Abrir: http://localhost:8088
-
-### 4. Verificar funcionamiento
+### Comandos disponibles
 
 ```bash
-curl http://localhost:8000/api/health
-# {"status":"ok"}
+make help          # Ver todos los comandos
+make start         # Iniciar con Docker
+make start-local   # Iniciar en modo local
+make stop          # Detener servicios
+make logs          # Ver logs
+make status        # Ver estado de servicios
+make restart       # Reiniciar servicios
 ```
 
 ---
 
 ## 🔌 API REST
 
-| Método | Endpoint              | Descripción                        |
-|--------|-----------------------|------------------------------------|
-| POST   | /api/auth/login       | Login, retorna JWT                 |
-| GET    | /api/auth/me          | Info del usuario autenticado       |
-| GET    | /api/emails           | Lista paginada con filtros         |
-| GET    | /api/emails/stats     | Estadísticas globales              |
-| GET    | /api/emails/blocked   | Lista de bloqueados                |
-| GET    | /api/emails/{id}      | Detalle completo + eventos         |
-| GET    | /api/emails/{id}/events | Solo historial de eventos        |
+| Método | Endpoint                | Descripción                 |
+| ------- | ----------------------- | ---------------------------- |
+| POST    | /api/auth/login         | Login, retorna JWT           |
+| GET     | /api/auth/me            | Info del usuario autenticado |
+| GET     | /api/emails             | Lista paginada con filtros   |
+| GET     | /api/emails/stats       | Estadísticas globales       |
+| GET     | /api/emails/blocked     | Lista de bloqueados          |
+| GET     | /api/emails/{id}        | Detalle completo + eventos   |
+| GET     | /api/emails/{id}/events | Solo historial de eventos    |
 
 ### Parámetros de GET /api/emails
 
-| Parámetro  | Tipo | Descripción                          |
-|------------|------|--------------------------------------|
+| Parámetro | Tipo | Descripción                          |
+| ---------- | ---- | ------------------------------------- |
 | page       | int  | Página (default: 1)                  |
 | per_page   | int  | Items por página (max 100)           |
-| status     | str  | delivered / sent / bounce / complaint|
+| status     | str  | delivered / sent / bounce / complaint |
 | email_to   | str  | Búsqueda parcial en destinatario     |
 | subject    | str  | Búsqueda parcial en asunto           |
-| date_from  | date | Fecha inicio YYYY-MM-DD              |
-| date_to    | date | Fecha fin YYYY-MM-DD                 |
+| date_from  | date | Fecha inicio YYYY-MM-DD               |
+| date_to    | date | Fecha fin YYYY-MM-DD                  |
 
 Docs interactivas: http://localhost:8000/docs
 
@@ -170,27 +197,38 @@ Docs interactivas: http://localhost:8000/docs
 
 ## 🔒 Seguridad del HTML renderizado
 
-Los correos HTML se muestran en un iframe con sandbox:
+Los correos HTML se muestran en un iframe con sandbox restriccivo:
 
 ```html
-<iframe sandbox="allow-same-origin">
+<iframe sandbox="">
 ```
 
 - ✅ Renderiza CSS, imágenes y layout del correo
 - ❌ Bloquea JavaScript
 - ❌ Bloquea navegación y links externos
 - ❌ Bloquea formularios y popups
+- ❌ No comparte mismo-origin con la app principal
 
 ---
 
 ## ⚙️ Variables de entorno
 
-| Variable        | Descripción                        |
-|-----------------|------------------------------------|
-| DATABASE_URL    | Cadena de conexión PostgreSQL      |
-| SECRET_KEY      | Clave para firmar JWT (32+ chars)  |
-| ADMIN_USER      | Usuario del dashboard              |
-| ADMIN_PASSWORD  | Contraseña del dashboard           |
+| Variable         | Descripción                              | Default                    |
+| ---------------- | ---------------------------------------- | -------------------------- |
+| DATABASE_URL     | Cadena de conexión PostgreSQL            | -                          |
+| SECRET_KEY       | Clave para firmar JWT (32+ chars)        | - (requerido)              |
+| ADMIN_USER       | Usuario del dashboard                    | admin                      |
+| ADMIN_PASSWORD   | Contraseña del dashboard                 | - (requerido)              |
+| ALLOWED_ORIGINS  | Orígenes CORS permitidos (coma-separado) | http://localhost:8080,...   |
+| POSTGRES_DB      | Nombre de la base de datos               | ses_dashboard              |
+| POSTGRES_USER    | Usuario de PostgreSQL                    | user                       |
+| POSTGRES_PASSWORD| Contraseña de PostgreSQL                 | - (requerido para Docker)  |
+
+Generar SECRET_KEY:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
 ---
 
@@ -200,6 +238,7 @@ Los adjuntos se almacenan como metadata JSONB en email_send.attachments.
 El dashboard los muestra en el panel de detalle automáticamente.
 
 Formato esperado del campo attachments:
+
 ```json
 [
   {
