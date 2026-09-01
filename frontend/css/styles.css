@@ -35,6 +35,8 @@
   --accent:      #4ade80;
   --accent-dim:  rgba(74,222,128,.10);
   --accent-glow: rgba(74,222,128,.18);
+  /* Accent text (for buttons on accent bg) */
+  --text-on-accent: #0a1a0e;
   /* Paleta semántica */
   --blue:        #60a5fa;
   --blue-dim:    rgba(96,165,250,.10);
@@ -70,6 +72,7 @@
   --text:       #111827;   --text2:      #4b5563;   --text3: #9ca3af;
   --accent:     #16a34a;   --accent-dim: rgba(22,163,74,.10);
                            --accent-glow:rgba(22,163,74,.18);
+  --text-on-accent: #fff;
   --blue:       #2563eb;   --blue-dim:   rgba(37,99,235,.10);
   --red:        #dc2626;   --red-dim:    rgba(220,38,38,.10);
   --orange:     #ea580c;   --orange-dim: rgba(234,88,12,.10);
@@ -85,7 +88,7 @@ body {
   font-family: var(--font-sans);
   background:  var(--bg);
   color:       var(--text);
-  font-size:   13px;
+  font-size:   15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -834,9 +837,9 @@ a           { color: inherit; text-decoration: none; }
   height: 32px; padding: 0 14px; border-radius: var(--r-sm);
   font-size: 12px; font-weight: 700; cursor: pointer; border: none; transition: opacity var(--t);
 }
-.btn-confirm-action.danger  { background: var(--red);    color: #fff; }
-.btn-confirm-action.warning { background: var(--orange); color: #fff; }
-.btn-confirm-action.info    { background: var(--blue);   color: #fff; }
+.btn-confirm-action.danger  { background: var(--red);    color: var(--text-on-accent); }
+.btn-confirm-action.warning { background: var(--orange); color: var(--text-on-accent); }
+.btn-confirm-action.info    { background: var(--blue);   color: var(--text-on-accent); }
 .btn-confirm-action:hover   { opacity: .85; }
 .btn-confirm-cancel {
   height: 32px; padding: 0 13px; border-radius: var(--r-sm);
@@ -1136,6 +1139,51 @@ a:focus-visible {
 }
 [data-theme="light"] .pdf-modal-body {
   background: var(--surface2);
+}
+
+/* ═══════════════════════════════════════════════════
+   §26  VIEW LAYOUTS & CHART HEIGHTS
+   ═══════════════════════════════════════════════════ */
+.view-inbox,
+.view-blocked {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Chart heights - responsive with clamp() */
+.chart-canvas-wrap,
+.donut-container {
+  height: clamp(140px, 20vw, 200px);
+}
+.chart-canvas-wrap.chart-sm,
+.donut-container.donut-sm {
+  height: clamp(120px, 18vw, 150px);
+}
+.u-skeleton {
+  height: 80px;
+}
+
+/* Hamburger menu button */
+.btn-menu {
+  display: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.btn-menu:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ═══════════════════════════════════════════════════

@@ -34,6 +34,8 @@
       --yellow-dim: rgba(251, 191, 36, .1);
       --blue: #60a5fa;
       --blue-dim: rgba(96, 165, 250, .1);
+      --text-on-accent: #0a1a0e;
+      --pdf-body: #3a3a3a;
       --mono: 'DM Mono', monospace;
       --sans: 'DM Sans', sans-serif;
       --display: 'Syne', sans-serif;
@@ -65,6 +67,8 @@
       --orange-dim: rgba(234, 88, 12, .1);
       --yellow: #d97706;
       --yellow-dim: rgba(217, 119, 6, .1);
+      --text-on-accent: #fff;
+      --pdf-body: #f0f2f5;
     }
 
     *,
@@ -219,7 +223,7 @@
       width: 100%;
       margin-top: 4px;
       background: var(--accent);
-      color: #0a1a0e;
+      color: var(--text-on-accent);
       border: none;
       border-radius: 7px;
       padding: 10px;
@@ -237,6 +241,32 @@
 
     .btn-login:active {
       transform: scale(.99)
+    }
+
+    .btn-login:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-login.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn-login.loading::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      margin-left: -9px;
+      margin-top: -9px;
+      border: 2px solid #0a1a0e;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
     }
 
     .login-error {
@@ -667,7 +697,7 @@
       justify-content: center;
       font-size: 11px;
       font-weight: 700;
-      color: #0a1a0e;
+      color: var(--text-on-accent);
       font-family: var(--display);
     }
 
@@ -1590,7 +1620,7 @@
     .pdf-modal-body {
       flex: 1;
       overflow: hidden;
-      background: #3a3a3a
+      background: var(--pdf-body)
     }
 
     .pdf-modal-body iframe {
@@ -2161,7 +2191,7 @@
           <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
             onkeydown="if(event.key==='Enter')doLogin()" />
         </div>
-        <button class="btn-login" onclick="doLogin()">Iniciar sesión →</button>
+        <button class="btn-login" id="btn-login" onclick="doLogin()">Iniciar sesión →</button>
         <div class="login-error" id="login-error"></div>
       </div>
     </div>
@@ -2276,9 +2306,9 @@
     <div class="main-panel">
 
       <!-- INBOX -->
-      <div id="view-inbox" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+      <div id="view-inbox" class="view-inbox">
         <div class="topbar">
-          <button class="btn-menu" onclick="toggleSidebar()" title="Menú" style="display:none;width:30px;height:30px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:16px;align-items:center;justify-content:center;flex-shrink:0;">☰</button>
+          <button class="btn-menu" onclick="toggleSidebar()" title="Menú">☰</button>
           <span class="topbar-title">Correos enviados</span>
           <div class="search-wrap">
             <span class="search-icon">⌕</span>
@@ -2317,7 +2347,7 @@
       </div>
 
       <!-- BLOCKED -->
-      <div id="view-blocked" style="display:none;flex-direction:column;height:100%;overflow:hidden">
+      <div id="view-blocked" class="view-blocked" style="display:none">
         <div class="topbar">
           <span class="topbar-title">Correos bloqueados</span>
         </div>
@@ -2373,7 +2403,13 @@
     async function doLogin() {
       const u = document.getElementById('login-user').value;
       const p = document.getElementById('login-pass').value;
-      document.getElementById('login-error').textContent = '';
+      const btn = document.getElementById('btn-login');
+      const errEl = document.getElementById('login-error');
+      
+      errEl.textContent = '';
+      btn.classList.add('loading');
+      btn.disabled = true;
+      
       try {
         const fd = new FormData();
         fd.append('username', u); fd.append('password', p);
@@ -2386,7 +2422,10 @@
         document.getElementById('sf-avatar').textContent = (data.full_name || u)[0].toUpperCase();
         showApp();
       } catch (e) {
-        document.getElementById('login-error').textContent = e.message;
+        errEl.textContent = e.message;
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
       }
     }
 
@@ -2675,10 +2714,12 @@
       });
       if (v === 'inbox') {
         document.getElementById('nav-inbox').classList.add('active');
-        document.getElementById('view-inbox').style.display = 'flex';
+        const inbox = document.getElementById('view-inbox');
+        inbox.style.display = '';
       } else {
         document.getElementById('nav-blocked').classList.add('active');
-        document.getElementById('view-blocked').style.display = 'flex';
+        const blocked = document.getElementById('view-blocked');
+        blocked.style.display = '';
         loadBlocked();
       }
     }

@@ -819,7 +819,7 @@ const ChartsModule = (() => {
     /* ── Skeleton loader ── */
     function _showSkeletons() {
         const c = document.getElementById('kpi-container');
-        if (c) c.innerHTML = Array(4).fill('<div class="kpi-card"><div class="u-skeleton" style="height:80px"></div></div>').join('');
+        if (c) c.innerHTML = Array(4).fill('<div class="kpi-card"><div class="u-skeleton"></div></div>').join('');
     }
 
     /* ══════════════════════════════════════════════
