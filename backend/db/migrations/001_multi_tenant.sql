@@ -32,6 +32,22 @@ CREATE TABLE IF NOT EXISTS app_users (
 CREATE INDEX idx_users_tenant ON app_users(tenant_id);
 CREATE INDEX idx_users_email ON app_users(email);
 
+-- Tabla de logs de webhooks (auditoría)
+CREATE TABLE IF NOT EXISTS webhook_logs (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE,
+    source_ip TEXT,
+    message_type TEXT,
+    message_id TEXT,
+    raw_message JSONB,
+    processed BOOLEAN DEFAULT FALSE,
+    error TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_webhook_logs_tenant ON webhook_logs(tenant_id, created_at DESC);
+CREATE INDEX idx_webhook_logs_message_id ON webhook_logs(message_id);
+
 -- Agregar tenant_id a tablas existentes
 ALTER TABLE email_send ADD COLUMN IF NOT EXISTS tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE;
 ALTER TABLE email_events ADD COLUMN IF NOT EXISTS tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE;
