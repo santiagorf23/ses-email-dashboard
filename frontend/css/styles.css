@@ -129,7 +129,7 @@ a           { color: inherit; text-decoration: none; }
 }
 
 /* ═══════════════════════════════════════════════════
-   §4  SIDEBAR
+   §4  SIDEBAR — Modern, clean design
    ═══════════════════════════════════════════════════ */
 .an-sidebar {
   width:          var(--sb-w);
@@ -146,7 +146,299 @@ a           { color: inherit; text-decoration: none; }
 }
 
 /* Colapsado: solo iconos */
-.an-sidebar.collapsed { width: var(--sb-collapsed); }
+.an-sidebar.collapsed { 
+  width: var(--sb-collapsed); 
+}
+
+/* Brand row — clean header */
+.asb-brand {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  padding:     0 14px;
+  height:      52px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.asb-logo {
+  width:    28px; 
+  height:   28px; 
+  border-radius: 8px; 
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #5eead4, #2dd4bf);
+  display:    flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size:  13px; 
+  box-shadow: 0 0 0 1px rgba(94,234,212,.25);
+}
+
+.asb-name { 
+  font-family: var(--font-display); 
+  font-size: 15px; 
+  font-weight: 700; 
+  letter-spacing: -.03em; 
+  white-space: nowrap; 
+  overflow: hidden;
+}
+
+.asb-name em { 
+  font-style: normal; 
+  color: var(--accent); 
+}
+
+.asb-collapse {
+  margin-left: auto; 
+  flex-shrink: 0;
+  width:  24px; 
+  height: 24px; 
+  border-radius: 6px;
+  border: 1px solid var(--border); 
+  color: var(--text3); 
+  font-size: 12px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  transition: all var(--t);
+}
+
+.asb-collapse:hover { 
+  border-color: var(--accent); 
+  color: var(--accent); 
+  background: var(--accent-dim); 
+}
+
+/* Nav section */
+.asb-nav {
+  flex: 1; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+  padding: 8px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 2px;
+}
+
+.asb-section-label {
+  font-size: 10px; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  letter-spacing: .08em;
+  color: var(--text3); 
+  padding: 10px 8px 6px; 
+  white-space: nowrap;
+}
+
+.asb-item {
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
+  padding: 8px 10px; 
+  border-radius: var(--r-sm);
+  font-size: 13px; 
+  font-weight: 500; 
+  color: var(--text2);
+  cursor: pointer; 
+  transition: all var(--t); 
+  white-space: nowrap;
+  text-decoration: none; 
+  border: none; 
+  background: none; 
+  width: 100%; 
+  text-align: left;
+}
+
+.asb-item:hover { 
+  background: var(--surface2); 
+  color: var(--text); 
+}
+
+.asb-item.active { 
+  background: var(--accent-dim); 
+  color: var(--accent); 
+}
+
+.asb-item-dot { 
+  width: 7px; 
+  height: 7px; 
+  border-radius: 50%; 
+  flex-shrink: 0; 
+  transition: background var(--t); 
+}
+
+.asb-item-label { 
+  flex: 1; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+.asb-item-count {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--surface3);
+  color: var(--text3);
+  border-radius: 10px;
+  padding: 1px 7px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.asb-item.active .asb-item-count {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+/* Footer — user info */
+.asb-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  flex-shrink: 0;
+}
+
+.asb-avatar {
+  width: 30px; 
+  height: 30px; 
+  border-radius: 50%; 
+  flex-shrink: 0;
+  background: var(--accent-dim); 
+  border: 1px solid rgba(94,234,212,.3);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size: 12px; 
+  font-weight: 700; 
+  color: var(--accent);
+}
+
+.asb-footer-info { 
+  flex: 1; 
+  min-width: 0; 
+  overflow: hidden; 
+}
+
+.asb-footer-name { 
+  font-size: 12px; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+.asb-footer-role { 
+  font-size: 10px; 
+  color: var(--text3); 
+  font-family: var(--font-mono); 
+}
+
+.asb-theme-btn {
+  width: 28px; 
+  height: 28px; 
+  border-radius: 6px; 
+  flex-shrink: 0;
+  border: 1px solid var(--border); 
+  color: var(--text3); 
+  font-size: 14px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  transition: all var(--t);
+}
+
+.asb-theme-btn:hover { 
+  border-color: var(--yellow); 
+  color: var(--yellow); 
+}
+
+/* ── Colapsed state: clean minimal look ── */
+.an-sidebar.collapsed .asb-name,
+.an-sidebar.collapsed .asb-section-label,
+.an-sidebar.collapsed .asb-item-label,
+.an-sidebar.collapsed .asb-item-count,
+.an-sidebar.collapsed .asb-footer-info { 
+  display: none !important; 
+}
+
+.an-sidebar.collapsed .asb-brand { 
+  justify-content: center; 
+  padding: 0 8px; 
+  gap: 0; 
+}
+
+.an-sidebar.collapsed .asb-logo { 
+  margin: 0 auto; 
+}
+
+.an-sidebar.collapsed .asb-collapse { 
+  display: none;
+}
+
+.an-sidebar.collapsed .asb-item { 
+  justify-content: center; 
+  padding: 10px 6px; 
+}
+
+.an-sidebar.collapsed .asb-item-dot { 
+  margin: 0; 
+}
+
+.an-sidebar.collapsed .asb-footer { 
+  justify-content: center; 
+  padding: 10px 6px; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+}
+
+.an-sidebar.collapsed .asb-footer-info,
+.an-sidebar.collapsed .asb-theme-btn { 
+  display: none; 
+}
+
+/* Tooltip for collapsed items */
+.an-sidebar.collapsed .asb-item {
+  position: relative;
+}
+
+.an-sidebar.collapsed .asb-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface3);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 100;
+  margin-left: 6px;
+}
+
+.an-sidebar.collapsed .asb-item:hover::after {
+  opacity: 1;
+}
+
+/* Overlay for mobile */
+.an-sidebar-overlay {
+  display: none; 
+  position: fixed; 
+  inset: 0; 
+  z-index: 9;
+  background: rgba(0,0,0,.55);
+}
+
+.an-sidebar-overlay.show { 
+  display: block; 
+}
 
 /* ── Brand row ── */
 .asb-brand {
@@ -587,29 +879,49 @@ a           { color: inherit; text-decoration: none; }
 
   /* Sidebar se convierte en drawer */
   .an-sidebar {
-    position:fixed; left:0; top:0; bottom:0; z-index:100;
-    transform:translateX(-100%);
-    transition:transform .25s cubic-bezier(.4,0,.2,1);
-    width:var(--sb-w) !important; /* override collapsed */
-    box-shadow:none;
+    position: fixed; 
+    left: 0; 
+    top: 0; 
+    bottom: 0; 
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    width: var(--sb-w) !important;
+    box-shadow: none;
   }
+
   .an-sidebar.open {
-    transform:translateX(0);
-    box-shadow:4px 0 32px rgba(0,0,0,.55);
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0,0,0,.55);
   }
+
   /* Cuando el sidebar está abierto en móvil, mostrar todos los textos */
   .an-sidebar.open .asb-name,
   .an-sidebar.open .asb-section-label,
   .an-sidebar.open .asb-item-label,
-  .an-sidebar.open .asb-footer-info { display:flex !important; }
-  .an-sidebar.open .asb-brand     { justify-content:flex-start; padding:0 14px; }
-  .an-sidebar.open .asb-logo      { margin:0; }
-  .an-sidebar.open .asb-item      { justify-content:flex-start; padding:7px 9px; }
+  .an-sidebar.open .asb-item-count,
+  .an-sidebar.open .asb-footer-info { 
+    display: flex !important; 
+  }
+
+  .an-sidebar.open .asb-brand { 
+    justify-content: flex-start; 
+    padding: 0 14px; 
+  }
+
+  .an-sidebar.open .asb-logo { 
+    margin: 0; 
+  }
+
+  .an-sidebar.open .asb-item { 
+    justify-content: flex-start; 
+    padding: 8px 10px; 
+  }
 
   /* Mostrar botón hamburguesa en móvil */
-  .btn-icon.btn-menu { display:flex; }
+  .btn-icon.btn-menu { display: flex; }
 
-  .an-content-area { height:100vh; }
+  .an-content-area { height: 100vh; }
 }
 
 /* 600px: KPIs en 1 col, fecha contraída */
@@ -901,7 +1213,7 @@ a           { color: inherit; text-decoration: none; }
 /* 768px: Sidebar drawer, split-view adjustments */
 @media (max-width: 768px) {
   /* Sidebar as drawer */
-  .sidebar {
+  .an-sidebar {
     position: fixed;
     left: 0;
     top: 0;
@@ -912,37 +1224,32 @@ a           { color: inherit; text-decoration: none; }
     width: 240px !important;
     box-shadow: none;
   }
-  .sidebar.open {
+  .an-sidebar.open {
     transform: translateX(0);
     box-shadow: 4px 0 32px rgba(0, 0, 0, .55);
   }
-  .sidebar.collapsed {
+  .an-sidebar.collapsed {
     width: 54px !important;
   }
 
   /* Show all text when sidebar is open */
-  .sidebar.open .sb-tagline,
-  .sidebar.open .sb-wordmark,
-  .sidebar.open .sb-metrics,
-  .sidebar.open .sb-health,
-  .sidebar.open .nav-group-label,
-  .sidebar.open .ni-label,
-  .sidebar.open .ni-count,
-  .sidebar.open .sf-info,
-  .sidebar.open .btn-logout,
-  .sidebar.open .sf-role {
+  .an-sidebar.open .asb-name,
+  .an-sidebar.open .asb-section-label,
+  .an-sidebar.open .asb-item-label,
+  .an-sidebar.open .asb-item-count,
+  .an-sidebar.open .asb-footer-info {
     display: flex !important;
   }
-  .sidebar.open .sb-brand {
+  .an-sidebar.open .asb-brand {
     justify-content: flex-start;
-    padding: 14px 14px 12px;
+    padding: 0 14px;
   }
-  .sidebar.open .sb-logo {
+  .an-sidebar.open .asb-logo {
     margin: 0;
   }
-  .sidebar.open .nav-item {
+  .an-sidebar.open .asb-item {
     justify-content: flex-start;
-    padding: 6px 9px;
+    padding: 8px 10px;
   }
 
   /* Show hamburger button */
@@ -1299,10 +1606,9 @@ a:focus-visible {
    §25  PRINT STYLES
    ═══════════════════════════════════════════════════ */
 @media print {
-  .sidebar,
+  .an-sidebar,
   .topbar,
   .an-topbar,
-  .an-sidebar,
   .pagination,
   .btn-export,
   .btn-pdf,
