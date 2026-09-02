@@ -65,11 +65,9 @@ CREATE INDEX IF NOT EXISTS idx_email_events_type
     ON email_events (event_type);
 
 -- Búsqueda full-text en asunto (opcional, para búsqueda avanzada)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS idx_email_send_subject_trgm
     ON email_send USING gin (subject gin_trgm_ops);
-
--- Habilitar extensión trigram si no está activa
--- CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- ============================================================
 -- Datos de prueba (comentar en producción)
