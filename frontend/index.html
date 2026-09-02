@@ -309,9 +309,9 @@
       display: none
     }
 
-    /* ═══ SIDEBAR ═══ */
-    .sidebar {
-      width: var(--sw);
+    /* ═══ SIDEBAR — Clean, modern design ═══ */
+    .an-sidebar {
+      width: var(--sb-w);
       flex-shrink: 0;
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -320,71 +320,60 @@
       overflow: hidden;
       transition: var(--sidebar-transition);
       position: relative;
+      z-index: 10;
     }
 
-    .sidebar.collapsed {
-      width: var(--sw-collapsed);
+    .an-sidebar.collapsed {
+      width: var(--sb-collapsed);
     }
 
-    .sidebar.collapsed .sb-tagline,
-    .sidebar.collapsed .sb-wordmark,
-    .sidebar.collapsed .sb-metrics,
-    .sidebar.collapsed .sb-health,
-    .sidebar.collapsed .nav-group-label,
-    .sidebar.collapsed .ni-label,
-    .sidebar.collapsed .ni-count,
-    .sidebar.collapsed .sf-info,
-    .sidebar.collapsed .btn-logout,
-    .sidebar.collapsed .sf-role {
-      display: none !important;
-    }
-
-    .sidebar.collapsed .sb-brand {
-      justify-content: center;
-      padding: 12px 8px;
-      gap: 0;
-    }
-
-    .sidebar.collapsed .sb-logo {
-      margin: 0 auto;
-    }
-
-    .sidebar.collapsed .sb-toggle {
-      margin: 0;
+    /* Brand */
+    .asb-brand {
+      padding: 0 14px;
+      height: 52px;
       display: flex;
-    }
-
-    .sidebar.collapsed .sb-nav {
-      padding: 6px 4px;
-    }
-
-    .sidebar.collapsed .nav-item {
-      justify-content: center;
-      padding: 8px;
-    }
-
-    .sidebar.collapsed .ni-dot {
-      margin: 0;
-    }
-
-    .sidebar.collapsed .sb-footer {
-      padding: 8px;
-      justify-content: center;
-    }
-
-    .sidebar.collapsed .avatar {
-      margin: 0 auto;
-    }
-
-    /* Toggle button — sits inside sb-brand, always visible */
-    .sb-toggle {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+    }
+
+    .asb-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #5eead4, #2dd4bf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 0 0 1px rgba(94, 234, 212, .25);
+    }
+
+    .asb-name {
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .asb-name em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .asb-collapse {
+      margin-left: auto;
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
       background: var(--surface2);
       border: 1px solid var(--border);
-      color: var(--text2);
+      color: var(--text3);
       font-size: 14px;
       font-weight: 700;
       display: flex;
@@ -392,380 +381,147 @@
       justify-content: center;
       cursor: pointer;
       transition: all .15s;
-      margin-left: auto;
     }
 
-    .sb-toggle:hover {
+    .asb-collapse:hover {
       border-color: var(--accent);
       color: var(--accent);
       background: var(--accent-dim);
     }
 
-    .sidebar.collapsed .sb-toggle {
-      margin-left: 0;
-    }
-
-    /* Brand */
-    .sb-brand {
-      padding: 14px 14px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sb-logo {
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, #5eead4, #2dd4bf);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      box-shadow: 0 0 0 1px rgba(94, 234, 212, .2), 0 4px 12px rgba(94, 234, 212, .1);
-    }
-
-    .sb-wordmark {
-      font-family: var(--display);
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -.02em
-    }
-
-    .sb-wordmark em {
-      font-style: normal;
-      color: var(--accent)
-    }
-
-    .sb-tagline {
-      font-size: 9px;
-      color: var(--text3);
-      font-family: var(--mono);
-      margin-left: auto;
-      white-space: nowrap
-    }
-
-    /* Metric cards in sidebar */
-    .sb-metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      padding: 10px
-    }
-
-    .sb-metric {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 9px 10px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .sb-metric::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      border-radius: 2px 2px 0 0;
-    }
-
-    .sb-metric.m-sent::after {
-      background: var(--blue)
-    }
-
-    .sb-metric.m-ok::after {
-      background: var(--accent)
-    }
-
-    .sb-metric.m-bounce::after {
-      background: var(--red)
-    }
-
-    .sb-metric.m-open::after {
-      background: var(--yellow)
-    }
-
-    .sm-label {
-      font-size: 9px;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      font-weight: 600
-    }
-
-    .sm-val {
-      font-family: var(--display);
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
-      margin-top: 3px;
-      letter-spacing: -.04em
-    }
-
-    .sm-val.c-blue {
-      color: var(--blue)
-    }
-
-    .sm-val.c-green {
-      color: var(--accent)
-    }
-
-    .sm-val.c-red {
-      color: var(--red)
-    }
-
-    .sm-val.c-yellow {
-      color: var(--yellow)
-    }
-
-    /* Health bars */
-    .sb-health {
-      margin: 0 10px 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 10px 11px
-    }
-
-    .sh-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px
-    }
-
-    .sh-title {
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: .08em
-    }
-
-    .sh-live {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 9px;
-      color: var(--text3);
-      font-family: var(--mono)
-    }
-
-    .sh-live::before {
-      content: '';
-      display: inline-block;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s ease-in-out infinite
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-        box-shadow: 0 0 0 0 rgba(94, 234, 212, .4)
-      }
-
-      50% {
-        opacity: .7;
-        box-shadow: 0 0 0 4px rgba(94, 234, 212, 0)
-      }
-    }
-
-    .hbar-row {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin-bottom: 5px
-    }
-
-    .hbar-row:last-child {
-      margin-bottom: 0
-    }
-
-    .hbar-lbl {
-      font-size: 10px;
-      color: var(--text2);
-      width: 60px;
-      flex-shrink: 0
-    }
-
-    .hbar-track {
-      flex: 1;
-      height: 3px;
-      background: var(--border2);
-      border-radius: 2px;
-      overflow: hidden
-    }
-
-    .hbar-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width .8s cubic-bezier(.4, 0, .2, 1)
-    }
-
-    .hbar-fill.ok {
-      background: var(--accent)
-    }
-
-    .hbar-fill.bad {
-      background: var(--red)
-    }
-
-    .hbar-pct {
-      font-size: 10px;
-      font-family: var(--mono);
-      color: var(--text2);
-      width: 30px;
-      text-align: right;
-      font-weight: 500
-    }
-
-    /* Nav */
-    .sb-nav {
+    /* Navigation */
+    .asb-nav {
       flex: 1;
       overflow-y: auto;
-      padding: 6px 8px
+      overflow-x: hidden;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .nav-group-label {
-      font-size: 9px;
+    .asb-section-label {
+      font-size: 10px;
       font-weight: 700;
-      color: var(--text3);
       text-transform: uppercase;
-      letter-spacing: .09em;
-      padding: 7px 6px 4px
+      letter-spacing: .08em;
+      color: var(--text3);
+      padding: 10px 8px 6px;
+      white-space: nowrap;
     }
 
-    .nav-item {
+    .asb-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 6px 9px;
-      border-radius: 6px;
-      background: none;
-      border: none;
-      color: var(--text2);
-      font-size: 12px;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
       font-weight: 500;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all var(--t);
+      white-space: nowrap;
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
       text-align: left;
-      transition: background var(--t), color var(--t);
-      margin-bottom: 1px;
     }
 
-    .nav-item:hover {
+    .asb-item:hover {
       background: var(--surface2);
-      color: var(--text)
+      color: var(--text);
     }
 
-    .nav-item.active {
+    .asb-item.active {
       background: var(--accent-dim);
-      color: var(--accent)
+      color: var(--accent);
     }
 
-    .nav-item .ni-dot {
-      width: 6px;
-      height: 6px;
+    .asb-item-dot {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      flex-shrink: 0
+      flex-shrink: 0;
+      transition: background var(--t);
     }
 
-    .nav-item .ni-label {
-      flex: 1
+    .asb-item-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .nav-item .ni-count {
-      font-size: 10px;
+    .asb-item-count {
+      font-size: 11px;
       font-family: var(--mono);
       background: var(--surface3);
       color: var(--text3);
-      border-radius: 9px;
-      padding: 1px 6px;
-      min-width: 22px;
+      border-radius: 10px;
+      padding: 1px 7px;
+      min-width: 24px;
       text-align: center;
     }
 
-    .nav-item.active .ni-count {
+    .asb-item.active .asb-item-count {
       background: var(--accent-glow);
-      color: var(--accent)
+      color: var(--accent);
     }
 
     /* Footer */
-    .sb-footer {
+    .asb-footer {
       border-top: 1px solid var(--border);
-      padding: 9px 11px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
-      gap: 8px
+      gap: 10px;
+      flex-shrink: 0;
     }
 
-    .avatar {
-      width: 26px;
-      height: 26px;
+    .asb-avatar {
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       flex-shrink: 0;
       background: linear-gradient(135deg, #5eead4, #7dd3fc);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-on-accent);
       font-family: var(--display);
     }
 
-    .sf-info {
+    .asb-footer-info {
       flex: 1;
-      min-width: 0
+      min-width: 0;
     }
 
-    .sf-name {
+    .asb-footer-name {
       font-size: 12px;
       font-weight: 600;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-family: var(--display)
+      font-family: var(--display);
     }
 
-    .sf-role {
-      font-size: 9px;
-      color: var(--text3);
-      font-family: var(--mono)
-    }
-
-    .btn-logout {
-      background: none;
-      border: 1px solid var(--border2);
-      color: var(--text3);
-      border-radius: 5px;
-      padding: 3px 8px;
+    .asb-footer-role {
       font-size: 10px;
-      transition: all var(--t);
+      color: var(--text3);
+      font-family: var(--mono);
     }
 
-    .btn-logout:hover {
-      border-color: var(--red);
-      color: var(--red)
-    }
-
-    .btn-theme {
+    .asb-theme-btn {
       background: none;
       border: 1px solid var(--border2);
       color: var(--text3);
-      border-radius: 5px;
-      width: 26px;
-      height: 26px;
-      font-size: 13px;
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
       transition: all var(--t);
       display: flex;
       align-items: center;
@@ -773,9 +529,136 @@
       flex-shrink: 0;
     }
 
-    .btn-theme:hover {
+    .asb-theme-btn:hover {
       border-color: var(--yellow);
-      color: var(--yellow)
+      color: var(--yellow);
+    }
+
+    /* Collapsed state */
+    .an-sidebar.collapsed .asb-name,
+    .an-sidebar.collapsed .asb-section-label,
+    .an-sidebar.collapsed .asb-item-label,
+    .an-sidebar.collapsed .asb-item-count,
+    .an-sidebar.collapsed .asb-footer-info {
+      display: none !important;
+    }
+
+    .an-sidebar.collapsed .asb-brand {
+      justify-content: center;
+      padding: 0 8px;
+      gap: 0;
+    }
+
+    .an-sidebar.collapsed .asb-logo {
+      margin: 0 auto;
+    }
+
+    .an-sidebar.collapsed .asb-collapse {
+      display: none;
+    }
+
+    .an-sidebar.collapsed .asb-item {
+      justify-content: center;
+      padding: 10px 6px;
+    }
+
+    .an-sidebar.collapsed .asb-item-dot {
+      margin: 0;
+    }
+
+    .an-sidebar.collapsed .asb-footer {
+      justify-content: center;
+      padding: 10px 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .an-sidebar.collapsed .asb-footer-info,
+    .an-sidebar.collapsed .asb-theme-btn {
+      display: none;
+    }
+
+    /* Tooltip for collapsed items */
+    .an-sidebar.collapsed .asb-item {
+      position: relative;
+    }
+
+    .an-sidebar.collapsed .asb-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--surface3);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 100;
+      margin-left: 6px;
+    }
+
+    .an-sidebar.collapsed .asb-item:hover::after {
+      opacity: 1;
+    }
+
+    /* Overlay for mobile */
+    .an-sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9;
+      background: rgba(0,0,0,.55);
+    }
+
+    .an-sidebar-overlay.show {
+      display: block;
+    }
+
+    /* Mobile sidebar */
+    @media (max-width: 768px) {
+      .an-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform .25s cubic-bezier(.4,0,.2,1);
+        width: var(--sb-w) !important;
+        box-shadow: none;
+      }
+
+      .an-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 32px rgba(0,0,0,.55);
+      }
+
+      .an-sidebar.open .asb-name,
+      .an-sidebar.open .asb-section-label,
+      .an-sidebar.open .asb-item-label,
+      .an-sidebar.open .asb-item-count,
+      .an-sidebar.open .asb-footer-info {
+        display: flex !important;
+      }
+
+      .an-sidebar.open .asb-brand {
+        justify-content: flex-start;
+        padding: 0 14px;
+      }
+
+      .an-sidebar.open .asb-logo {
+        margin: 0;
+      }
+
+      .an-sidebar.open .asb-item {
+        justify-content: flex-start;
+        padding: 8px 10px;
+      }
     }
 
     /* ═══ MAIN PANEL ═══ */
@@ -2294,107 +2177,75 @@
   <!-- APP -->
   <div id="app" class="hidden">
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="sb-brand">
-        <div class="sb-logo">✦</div>
-        <div class="sb-wordmark">Mail<em>Track</em></div>
-        <div class="sb-tagline">SES Monitor</div>
-        <button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Colapsar sidebar">‹</button>
+    <!-- SIDEBAR — Unified clean design -->
+    <aside class="an-sidebar" id="an-sidebar" aria-label="Menú lateral">
+      <!-- Brand -->
+      <div class="asb-brand">
+        <div class="asb-logo">✦</div>
+        <div class="asb-name">Mail<em>Track</em></div>
+        <button class="asb-collapse" id="sb-toggle" onclick="toggleSidebar()" title="Colapsar sidebar">‹</button>
       </div>
 
-      <!-- Metric cards -->
-      <div class="sb-metrics">
-        <div class="sb-metric m-sent">
-          <div class="sm-label">Enviados</div>
-          <div class="sm-val c-blue" id="count-all">—</div>
-        </div>
-        <div class="sb-metric m-ok">
-          <div class="sm-label">Entregados</div>
-          <div class="sm-val c-green" id="count-delivered">—</div>
-        </div>
-        <div class="sb-metric m-bounce">
-          <div class="sm-label">Bounce</div>
-          <div class="sm-val c-red" id="count-bounce">—</div>
-        </div>
-        <div class="sb-metric m-open">
-          <div class="sm-label">Abiertos</div>
-          <div class="sm-val c-yellow" id="count-open">—</div>
-        </div>
-      </div>
-
-      <!-- Health -->
-      <div class="sb-health">
-        <div class="sh-header">
-          <span class="sh-title">Salud del envío</span>
-          <span class="sh-live">EN VIVO</span>
-        </div>
-        <div class="hbar-row">
-          <span class="hbar-lbl">Entrega</span>
-          <div class="hbar-track">
-            <div class="hbar-fill ok" id="bar-delivery" style="width:0%"></div>
-          </div>
-          <span class="hbar-pct" id="sb-delivery">—</span>
-        </div>
-        <div class="hbar-row">
-          <span class="hbar-lbl">Bounce</span>
-          <div class="hbar-track">
-            <div class="hbar-fill bad" id="bar-bounce" style="width:0%"></div>
-          </div>
-          <span class="hbar-pct" id="sb-bounce">—</span>
-        </div>
-      </div>
-
-      <!-- Nav -->
-      <div class="sb-nav">
-        <div class="nav-group-label">Bandeja</div>
-        <button class="nav-item active" id="nav-inbox" onclick="showView('inbox')">
-          <span class="ni-dot" style="background:var(--blue)"></span>
-          <span class="ni-label">Todos los envíos</span>
-          <span class="ni-count" id="nav-count-all">—</span>
+      <!-- Navigation -->
+      <nav class="asb-nav">
+        <div class="asb-section-label">Bandeja</div>
+        
+        <button class="asb-item active" id="nav-inbox" onclick="showView('inbox')" data-tooltip="Todos los envíos">
+          <span class="asb-item-dot" style="background:var(--blue)"></span>
+          <span class="asb-item-label">Todos los envíos</span>
+          <span class="asb-item-count" id="nav-count-all">—</span>
         </button>
-        <a class="nav-item" id="nav-analytics" href="analytics.html">
-          <span class="ni-dot" style="background:var(--accent)"></span>
-          <span class="ni-label">Analítica</span>
+        
+        <a class="asb-item" id="nav-analytics" href="analytics.html" data-tooltip="Analítica">
+          <span class="asb-item-dot" style="background:var(--accent)"></span>
+          <span class="asb-item-label">Analítica</span>
         </a>
-        <button class="nav-item" id="nav-blocked" onclick="showView('blocked')">
-          <span class="ni-dot" style="background:var(--red)"></span>
-          <span class="ni-label">Bloqueados</span>
+        
+        <button class="asb-item" id="nav-blocked" onclick="showView('blocked')" data-tooltip="Bloqueados">
+          <span class="asb-item-dot" style="background:var(--red)"></span>
+          <span class="asb-item-label">Bloqueados</span>
         </button>
 
-        <div class="nav-group-label" style="margin-top:4px">Estado</div>
-        <button class="nav-item" onclick="filterByStatus('delivered')">
-          <span class="ni-dot" style="background:var(--accent)"></span>
-          <span class="ni-label">Entregados</span>
-          <span class="ni-count" id="fnav-delivered">—</span>
+        <div class="asb-section-label" style="margin-top: 8px">Estado</div>
+        
+        <button class="asb-item" onclick="filterByStatus('delivered')" data-tooltip="Entregados">
+          <span class="asb-item-dot" style="background:var(--accent)"></span>
+          <span class="asb-item-label">Entregados</span>
+          <span class="asb-item-count" id="fnav-delivered">—</span>
         </button>
-        <button class="nav-item" onclick="filterByStatus('open')">
-          <span class="ni-dot" style="background:var(--yellow)"></span>
-          <span class="ni-label">Abiertos</span>
-          <span class="ni-count" id="fnav-open">—</span>
+        
+        <button class="asb-item" onclick="filterByStatus('open')" data-tooltip="Abiertos">
+          <span class="asb-item-dot" style="background:var(--yellow)"></span>
+          <span class="asb-item-label">Abiertos</span>
+          <span class="asb-item-count" id="fnav-open">—</span>
         </button>
-        <button class="nav-item" onclick="filterByStatus('bounce')">
-          <span class="ni-dot" style="background:var(--red)"></span>
-          <span class="ni-label">Bounce</span>
-          <span class="ni-count" id="fnav-bounce">—</span>
+        
+        <button class="asb-item" onclick="filterByStatus('bounce')" data-tooltip="Bounce">
+          <span class="asb-item-dot" style="background:var(--red)"></span>
+          <span class="asb-item-label">Bounce</span>
+          <span class="asb-item-count" id="fnav-bounce">—</span>
         </button>
-        <button class="nav-item" onclick="filterByStatus('complaint')">
-          <span class="ni-dot" style="background:var(--orange)"></span>
-          <span class="ni-label">Complaint</span>
-          <span class="ni-count" id="fnav-complaint">—</span>
+        
+        <button class="asb-item" onclick="filterByStatus('complaint')" data-tooltip="Complaint">
+          <span class="asb-item-dot" style="background:var(--orange)"></span>
+          <span class="asb-item-label">Complaint</span>
+          <span class="asb-item-count" id="fnav-complaint">—</span>
         </button>
-      </div>
+      </nav>
 
-      <div class="sb-footer">
-        <div class="avatar" id="sf-avatar">A</div>
-        <div class="sf-info">
-          <div class="sf-name" id="sf-name">Administrador</div>
-          <div class="sf-role">acceso interno</div>
+      <!-- Footer -->
+      <div class="asb-footer">
+        <div class="asb-avatar" id="sf-avatar">A</div>
+        <div class="asb-footer-info">
+          <div class="asb-footer-name" id="sf-name">Administrador</div>
+          <div class="asb-footer-role">acceso interno</div>
         </div>
-        <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">☀</button>
-        <button class="btn-logout" onclick="doLogout()">Salir</button>
+        <button class="asb-theme-btn" id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">☀</button>
       </div>
-    </div>
+    </aside>
+    
+    <!-- Overlay for mobile -->
+    <div id="sidebar-overlay" class="an-sidebar-overlay"></div>
 
     <!-- MAIN -->
     <div class="main-panel">
@@ -2820,7 +2671,7 @@
 
     // ── NAV ───────────────────────────────────────────────
     function showView(v) {
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.asb-item').forEach(el => el.classList.remove('active'));
       ['inbox', 'blocked'].forEach(id => {
         const el = document.getElementById('view-' + id);
         if (el) el.style.display = 'none';
@@ -2993,12 +2844,14 @@
 
     // ── SIDEBAR TOGGLE ───────────────────────────────────
     function toggleSidebar() {
-      const sb = document.querySelector('.sidebar');
+      const sb = document.getElementById('an-sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
       const isMobile = window.innerWidth <= 768;
       
       if (isMobile) {
         // En móvil: abrir/cerrar drawer
         sb.classList.toggle('open');
+        overlay.classList.toggle('show');
       } else {
         // En desktop: colapsar/expandir
         const btn = document.getElementById('sb-toggle');
@@ -3010,13 +2863,22 @@
 
     // Cerrar sidebar al hacer clic fuera en móvil
     document.addEventListener('click', (e) => {
-      const sb = document.querySelector('.sidebar');
+      const sb = document.getElementById('an-sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
       const isMobile = window.innerWidth <= 768;
       if (isMobile && sb.classList.contains('open')) {
         if (!sb.contains(e.target) && !e.target.closest('.btn-menu')) {
           sb.classList.remove('open');
+          overlay.classList.remove('show');
         }
       }
+    });
+
+    // Cerrar sidebar al hacer clic en el overlay
+    document.getElementById('sidebar-overlay').addEventListener('click', () => {
+      const sb = document.getElementById('an-sidebar');
+      sb.classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('show');
     });
 
     // ── THEME TOGGLE ──────────────────────────────────────
@@ -3045,7 +2907,7 @@
 
       // Restore sidebar state
       if (localStorage.getItem('sb_collapsed') === '1') {
-        document.querySelector('.sidebar').classList.add('collapsed');
+        document.getElementById('an-sidebar').classList.add('collapsed');
         document.getElementById('sb-toggle').textContent = '›';
       }
 
