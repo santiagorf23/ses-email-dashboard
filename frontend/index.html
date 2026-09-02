@@ -8,6 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>MailTrack - AWS</title>
+  <!-- Prevent flash of login screen: check token before paint -->
+  <script>
+    if (localStorage.getItem('ses_token')) {
+      document.documentElement.classList.add('has-token');
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
@@ -15,30 +21,40 @@
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     :root {
-      --bg: #07080a;
-      --surface: #0d0f12;
-      --surface2: #131619;
-      --surface3: #191c21;
-      --border: #1e2229;
-      --border2: #2a303a;
-      --accent: #4ade80;
-      --accent-dim: rgba(74, 222, 128, .1);
-      --accent-glow: rgba(74, 222, 128, .18);
-      --accent2: #60a5fa;
-      --accent2-dim: rgba(96, 165, 250, .1);
-      --text: #f0f2f5;
-      --text2: #8b95a6;
-      --text3: #3f4855;
-      --red: #f87171;
-      --red-dim: rgba(248, 113, 113, .1);
-      --orange: #fb923c;
-      --orange-dim: rgba(251, 146, 60, .1);
-      --yellow: #fbbf24;
-      --yellow-dim: rgba(251, 191, 36, .1);
-      --blue: #60a5fa;
-      --blue-dim: rgba(96, 165, 250, .1);
+      /* Modern, calm palette - less saturated */
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface2: #181b22;
+      --surface3: #1f232b;
+      --border: #252a34;
+      --border2: #323842;
+      
+      /* Accent - muted teal (calming) */
+      --accent: #5eead4;
+      --accent-dim: rgba(94, 234, 212, .08);
+      --accent-glow: rgba(94, 234, 212, .15);
+      
+      /* Secondary accent - soft blue */
+      --accent2: #7dd3fc;
+      --accent2-dim: rgba(125, 211, 252, .08);
+      
+      /* Text - softer whites */
+      --text: #e8eaf0;
+      --text2: #94a3b8;
+      --text3: #475569;
+      
+      /* Status colors - muted */
+      --red: #fca5a5;
+      --red-dim: rgba(252, 165, 165, .08);
+      --orange: #fdba74;
+      --orange-dim: rgba(253, 186, 116, .08);
+      --yellow: #fde047;
+      --yellow-dim: rgba(253, 224, 71, .08);
+      --blue: #93c5fd;
+      --blue-dim: rgba(147, 197, 253, .08);
+      
       --text-on-accent: #0a1a0e;
-      --pdf-body: #3a3a3a;
+      --pdf-body: #1a1d24;
       --mono: 'DM Mono', monospace;
       --sans: 'DM Sans', sans-serif;
       --display: 'Syne', sans-serif;
@@ -50,26 +66,29 @@
 
     /* ── LIGHT THEME ── */
     [data-theme="light"] {
-      --bg: #f4f6f9;
+      --bg: #f8fafc;
       --surface: #ffffff;
-      --surface2: #f0f2f5;
-      --surface3: #e8ecf0;
-      --border: #e2e6ec;
-      --border2: #cdd3db;
-      --text: #111827;
-      --text2: #4b5563;
-      --text3: #9ca3af;
-      --accent: #16a34a;
-      --accent-dim: rgba(22, 163, 74, .1);
-      --accent-glow: rgba(22, 163, 74, .18);
-      --blue: #2563eb;
-      --blue-dim: rgba(37, 99, 235, .1);
+      --surface2: #f1f5f9;
+      --surface3: #e2e8f0;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --text: #0f172a;
+      --text2: #475569;
+      --text3: #94a3b8;
+      
+      /* Accent - teal for light theme */
+      --accent: #0d9488;
+      --accent-dim: rgba(13, 148, 136, .08);
+      --accent-glow: rgba(13, 148, 136, .15);
+      
+      --blue: #0284c7;
+      --blue-dim: rgba(2, 132, 199, .08);
       --red: #dc2626;
-      --red-dim: rgba(220, 38, 38, .1);
+      --red-dim: rgba(220, 38, 38, .08);
       --orange: #ea580c;
-      --orange-dim: rgba(234, 88, 12, .1);
-      --yellow: #d97706;
-      --yellow-dim: rgba(217, 119, 6, .1);
+      --orange-dim: rgba(234, 88, 12, .08);
+      --yellow: #ca8a04;
+      --yellow-dim: rgba(202, 138, 4, .08);
       --text-on-accent: #fff;
       --pdf-body: #f0f2f5;
     }
@@ -127,7 +146,7 @@
       justify-content: center;
       height: 100vh;
       background:
-        radial-gradient(ellipse 600px 400px at 20% 50%, rgba(74, 222, 128, .04) 0%, transparent 70%),
+        radial-gradient(ellipse 600px 400px at 20% 50%, rgba(94, 234, 212, .04) 0%, transparent 70%),
         radial-gradient(ellipse 400px 300px at 80% 20%, rgba(96, 165, 250, .04) 0%, transparent 60%),
         var(--bg);
     }
@@ -149,12 +168,12 @@
       height: 36px;
       border-radius: 9px;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #4ade80, #22c55e);
+      background: linear-gradient(135deg, #5eead4, #2dd4bf);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 16px;
-      box-shadow: 0 0 0 1px rgba(74, 222, 128, .3), 0 8px 24px rgba(74, 222, 128, .15);
+      box-shadow: 0 0 0 1px rgba(94, 234, 212, .3), 0 8px 24px rgba(94, 234, 212, .15);
     }
 
     .login-wordmark {
@@ -235,7 +254,7 @@
       font-family: var(--display);
       letter-spacing: -.01em;
       transition: opacity var(--t), transform var(--t);
-      box-shadow: 0 4px 20px rgba(74, 222, 128, .25);
+      box-shadow: 0 4px 20px rgba(94, 234, 212, .25);
     }
 
     .btn-login:hover {
@@ -400,12 +419,12 @@
       height: 26px;
       border-radius: 7px;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #4ade80, #22c55e);
+      background: linear-gradient(135deg, #5eead4, #2dd4bf);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
-      box-shadow: 0 0 0 1px rgba(74, 222, 128, .2), 0 4px 12px rgba(74, 222, 128, .1);
+      box-shadow: 0 0 0 1px rgba(94, 234, 212, .2), 0 4px 12px rgba(94, 234, 212, .1);
     }
 
     .sb-wordmark {
@@ -552,12 +571,12 @@
       0%,
       100% {
         opacity: 1;
-        box-shadow: 0 0 0 0 rgba(74, 222, 128, .4)
+        box-shadow: 0 0 0 0 rgba(94, 234, 212, .4)
       }
 
       50% {
         opacity: .7;
-        box-shadow: 0 0 0 4px rgba(74, 222, 128, 0)
+        box-shadow: 0 0 0 4px rgba(94, 234, 212, 0)
       }
     }
 
@@ -694,7 +713,7 @@
       height: 26px;
       border-radius: 50%;
       flex-shrink: 0;
-      background: linear-gradient(135deg, #4ade80, #60a5fa);
+      background: linear-gradient(135deg, #5eead4, #7dd3fc);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1010,7 +1029,7 @@
     }
 
     .email-row.selected {
-      background: rgba(74, 222, 128, .05)
+      background: rgba(94, 234, 212, .05)
     }
 
     .email-row.selected::before {
@@ -1168,7 +1187,7 @@
 
     .pag-btn.cur {
       background: var(--accent-dim);
-      border-color: rgba(74, 222, 128, .3);
+      border-color: rgba(94, 234, 212, .3);
       color: var(--accent)
     }
 
@@ -1378,7 +1397,7 @@
     }
 
     .attach-btn.dl {
-      border-color: rgba(74, 222, 128, .2);
+      border-color: rgba(94, 234, 212, .2);
       color: var(--accent)
     }
 
@@ -1840,7 +1859,7 @@
 
     .an-pill.active {
       background: var(--accent-dim);
-      border-color: rgba(74, 222, 128, .4);
+      border-color: rgba(94, 234, 212, .4);
       color: var(--accent)
     }
 
@@ -2190,7 +2209,7 @@
       right: 18px;
       z-index: 500;
       background: var(--surface);
-      border: 1px solid rgba(74, 222, 128, .3);
+      border: 1px solid rgba(94, 234, 212, .3);
       color: var(--accent);
       border-radius: 7px;
       padding: 8px 14px;

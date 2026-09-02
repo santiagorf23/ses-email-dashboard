@@ -908,11 +908,11 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
         return {
             grid: l ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)',
             tick: l ? '#6b7280' : '#52525b',
-            blue: l ? '#2563eb' : '#60a5fa',
-            green: l ? '#16a34a' : '#4ade80',
-            red: l ? '#dc2626' : '#f87171',
-            orange: l ? '#ea580c' : '#fb923c',
-            yellow: l ? '#d97706' : '#fbbf24',
+            blue: l ? '#0284c7' : '#93c5fd',
+            green: l ? '#0d9488' : '#5eead4',
+            red: l ? '#dc2626' : '#fca5a5',
+            orange: l ? '#ea580c' : '#fdba74',
+            yellow: l ? '#ca8a04' : '#fde047',
         };
     }
 
