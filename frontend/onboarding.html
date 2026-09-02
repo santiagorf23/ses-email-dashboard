@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding - SES Dashboard</title>
+    <link rel="stylesheet" href="css/inbox.css">
+    <link rel="stylesheet" href="css/onboarding.css">
+</head>
+<body class="dark">
+    <div class="onboarding-container">
+        <header class="onboarding-header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                <span>SES Dashboard</span>
+            </div>
+            <div class="step-indicator">
+                <div class="step active" data-step="1">1</div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">2</div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">3</div>
+                <div class="step-line"></div>
+                <div class="step" data-step="4">4</div>
+                <div class="step-line"></div>
+                <div class="step" data-step="5">5</div>
+            </div>
+        </header>
+
+        <main class="onboarding-content">
+            <!-- Step 1: Welcome -->
+            <div class="wizard-step active" id="step-1">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <h1>Bienvenido a SES Dashboard</h1>
+                <p class="subtitle">Configura tu dashboard de email en 5 pasos simples</p>
+                
+                <div class="form-group">
+                    <label for="team-name">Nombre del equipo/proyecto</label>
+                    <input type="text" id="team-name" placeholder="Mi Empresa" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="domain">Dominio de email principal</label>
+                    <input type="text" id="domain" placeholder="ejemplo.com" required>
+                    <small>Solo necesitas el dominio, no el email completo</small>
+                </div>
+                
+                <div class="step-actions">
+                    <button class="btn btn-primary" onclick="nextStep(1)">Comenzar configuración</button>
+                </div>
+            </div>
+
+            <!-- Step 2: AWS Setup -->
+            <div class="wizard-step" id="step-2">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+                    </svg>
+                </div>
+                <h1>Configura AWS</h1>
+                <p class="subtitle">Conecta tu cuenta de AWS para recibir eventos de email</p>
+                
+                <div class="instructions-box">
+                    <h3>Pasos para crear usuario IAM:</h3>
+                    <ol>
+                        <li>Ve a <a href="https://console.aws.amazon.com/iam/" target="_blank">AWS IAM Console</a></li>
+                        <li>Crear usuario → Nombre: <code>ses-dashboard</code></li>
+                        <li>Adjuntar políticas: <code>AmazonSESFullAccess</code> y <code>AmazonSNSFullAccess</code></li>
+                        <li>Crear usuario → Guardar Access Key y Secret Key</li>
+                    </ol>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="aws-access-key">AWS Access Key ID</label>
+                        <input type="text" id="aws-access-key" placeholder="AKIAIOSFODNN7EXAMPLE" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="aws-secret-key">AWS Secret Access Key</label>
+                        <input type="password" id="aws-secret-key" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aws-region">Región AWS</label>
+                    <select id="aws-region">
+                        <option value="us-east-1">US East (N. Virginia)</option>
+                        <option value="us-west-2">US West (Oregon)</option>
+                        <option value="eu-west-1">EU (Ireland)</option>
+                        <option value="eu-central-1">EU (Frankfurt)</option>
+                        <option value="sa-east-1">South America (São Paulo)</option>
+                    </select>
+                </div>
+                
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="prevStep(2)">Atrás</button>
+                    <button class="btn btn-primary" onclick="verifyAWS()">Verificar credenciales</button>
+                </div>
+                
+                <div id="aws-verification-result" class="verification-result" style="display: none;"></div>
+            </div>
+
+            <!-- Step 3: Domain Verification -->
+            <div class="wizard-step" id="step-3">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <h1>Verifica tu dominio</h1>
+                <p class="subtitle">Agrega registros DNS para demostrar propiedad del dominio</p>
+                
+                <div id="dns-records" class="dns-records" style="display: none;">
+                    <h3>Agrega estos registros en tu DNS:</h3>
+                    <div class="dns-record">
+                        <span class="record-type">TXT</span>
+                        <code id="dns-txt"></code>
+                        <button class="btn-copy" onclick="copyToClipboard('dns-txt')">Copiar</button>
+                    </div>
+                    <div class="dns-record">
+                        <span class="record-type">CNAME</span>
+                        <code id="dns-cname-bounce"></code>
+                        <button class="btn-copy" onclick="copyToClipboard('dns-cname-bounce')">Copiar</button>
+                    </div>
+                    <div class="dns-record">
+                        <span class="record-type">CNAME</span>
+                        <code id="dns-cname-dkim"></code>
+                        <button class="btn-copy" onclick="copyToClipboard('dns-cname-dkim')">Copiar</button>
+                    </div>
+                </div>
+                
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="prevStep(3)">Atrás</button>
+                    <button class="btn btn-primary" onclick="verifyDomain()">Verificar dominio</button>
+                </div>
+                
+                <div id="domain-verification-result" class="verification-result" style="display: none;"></div>
+            </div>
+
+            <!-- Step 4: Configure Webhook -->
+            <div class="wizard-step" id="step-4">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                </div>
+                <h1>Configura el Webhook</h1>
+                <p class="subtitle">Recibe notificaciones de email automáticamente</p>
+                
+                <div class="webhook-url-box">
+                    <label>Tu URL de webhook:</label>
+                    <code id="webhook-url">https://tu-dominio.com/api/webhooks/ses</code>
+                    <button class="btn-copy" onclick="copyToClipboard('webhook-url')">Copiar</button>
+                </div>
+                
+                <div class="instructions-box">
+                    <h3>Suscribir SNS Topic:</h3>
+                    <p>Ejecuta este comando en AWS CLI:</p>
+                    <code class="command-block" id="sns-command">
+aws sns subscribe --topic-arn ARN_DEL_TOPIC --protocol https --notification-endpoint https://tu-dominio.com/api/webhooks/ses
+                    </code>
+                </div>
+                
+                <div class="form-group">
+                    <label for="topic-arn">ARN del Topic SNS</label>
+                    <input type="text" id="topic-arn" placeholder="arn:aws:sns:us-east-1:123456789:ses-events" required>
+                </div>
+                
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="prevStep(4)">Atrás</button>
+                    <button class="btn btn-primary" onclick="subscribeSNS()">Suscribir SNS</button>
+                </div>
+                
+                <div id="sns-verification-result" class="verification-result" style="display: none;"></div>
+            </div>
+
+            <!-- Step 5: Test -->
+            <div class="wizard-step" id="step-5">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h1>Prueba tu configuración</h1>
+                <p class="subtitle">Envía un email de prueba para verificar que todo funciona</p>
+                
+                <div class="test-box">
+                    <div class="test-status" id="test-status">
+                        <p>Haz clic en "Enviar prueba" para enviar un email de verificación</p>
+                    </div>
+                    
+                    <div class="test-progress" id="test-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <p>Esperando evento... <span id="test-timer">30</span>s</p>
+                    </div>
+                    
+                    <div class="test-result" id="test-result" style="display: none;">
+                        <div class="result-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <h2>¡Funciona!</h2>
+                        <p>Tu dashboard está configurado correctamente</p>
+                    </div>
+                </div>
+                
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="prevStep(5)">Atrás</button>
+                    <button class="btn btn-primary" id="btn-send-test" onclick="sendTestEmail()">Enviar prueba</button>
+                    <button class="btn btn-primary" id="btn-go-dashboard" onclick="goToDashboard()" style="display: none;">Ir al Dashboard</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/onboarding.js"></script>
+</body>
+</html>
