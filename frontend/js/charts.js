@@ -593,6 +593,7 @@ const ChartsModule = (() => {
 
     function _renderDonut(id, { total, delivered, open, bounce, complaint }, cc) {
         const cv = document.getElementById(id); if (!cv) return;
+        const cs = getComputedStyle(document.documentElement);
         const pending = Math.max(0, total - delivered - bounce - complaint);
         const segs = [
             { label: 'Entregados', value: delivered, color: cc.green },
@@ -607,15 +608,15 @@ const ChartsModule = (() => {
                 labels: segs.map(s => s.label),
                 datasets: [{
                     data: segs.map(s => s.value), backgroundColor: segs.map(s => s.color),
-                    borderColor: _s.theme === 'light' ? '#fff' : '#0d0f12', borderWidth: 3, hoverOffset: 6
+                    borderColor: cs.getPropertyValue('--bg').trim() || (_s.theme === 'light' ? '#fff' : '#0d0f12'), borderWidth: 3, hoverOffset: 6
                 }],
             }, options: {
                 responsive: true, cutout: '68%', plugins: {
                     legend: { display: false }, tooltip: {
-                        backgroundColor: _s.theme === 'light' ? '#fff' : '#18181b',
-                        borderColor: _s.theme === 'light' ? '#e2e6ec' : '#2a303a', borderWidth: 1,
-                        titleColor: _s.theme === 'light' ? '#111827' : '#f0f2f5',
-                        bodyColor: _s.theme === 'light' ? '#4b5563' : '#8b95a6',
+                        backgroundColor: cs.getPropertyValue('--surface').trim() || (_s.theme === 'light' ? '#fff' : '#18181b'),
+                        borderColor: cs.getPropertyValue('--border2').trim() || (_s.theme === 'light' ? '#e2e6ec' : '#2a303a'), borderWidth: 1,
+                        titleColor: cs.getPropertyValue('--text').trim() || (_s.theme === 'light' ? '#111827' : '#f0f2f5'),
+                        bodyColor: cs.getPropertyValue('--text2').trim() || (_s.theme === 'light' ? '#4b5563' : '#8b95a6'),
                         titleFont: { family: 'Syne', weight: '700', size: 12 }, bodyFont: { family: 'DM Mono', size: 11 },
                         padding: 10, cornerRadius: 8,
                         callbacks: { label: ctx => ` ${ctx.label}: ${Number(ctx.parsed).toLocaleString('es-CO')} (${total > 0 ? (ctx.parsed / total * 100).toFixed(1) : 0}%)` },

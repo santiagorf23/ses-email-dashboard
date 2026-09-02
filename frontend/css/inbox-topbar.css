@@ -1,0 +1,123 @@
+/* ═══ TOPBAR ═══ */
+.topbar {
+  height: 48px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+
+.topbar-title {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -.02em
+}
+
+.search-wrap {
+  flex: 1;
+  max-width: 360px;
+  position: relative
+}
+
+.search-wrap input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 12px 6px 32px;
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+
+.search-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim)
+}
+
+.search-wrap input::placeholder {
+  color: var(--text3)
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  font-size: 12px;
+  pointer-events: none
+}
+
+.topbar-filters {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-left: auto
+}
+
+.fsel {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: 11px;
+  outline: none;
+  height: 30px;
+  transition: border-color var(--t);
+}
+
+.fsel:focus {
+  border-color: var(--accent)
+}
+
+input[type="date"].fsel {
+  color-scheme: dark;
+  width: 122px
+}
+
+.topbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0
+}
+
+.refresh-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t);
+}
+
+.refresh-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim)
+}
+
+.refresh-btn.spinning #refresh-icon {
+  display: inline-block;
+  animation: spin .6s linear infinite
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg)
+  }
+}
