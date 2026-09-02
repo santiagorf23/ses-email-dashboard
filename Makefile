@@ -9,6 +9,9 @@ YELLOW := \033[1;33m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
+# Detect docker compose command (v2 plugin or standalone)
+DC := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+
 help: ## Mostrar esta ayuda
 	@echo "$(GREEN)SES Mail Dashboard - Comandos disponibles:$(NC)"
 	@echo ""
@@ -17,7 +20,7 @@ help: ## Mostrar esta ayuda
 
 start: ## Iniciar todo con Docker (DB + backend + frontend)
 	@echo "$(GREEN)Iniciando servicios con Docker...$(NC)"
-	docker-compose up -d --build
+	$(DC) up -d --build
 	@echo "$(GREEN)Servicios iniciados:$(NC)"
 	@echo "  Frontend: http://localhost:8080"
 	@echo "  Backend:  http://localhost:8000"
@@ -37,33 +40,33 @@ start-local: ## Iniciar en modo desarrollo local
 
 stop: ## Detener todos los servicios Docker
 	@echo "$(RED)Deteniendo servicios...$(NC)"
-	docker-compose down
+	$(DC) down
 	@echo "$(GREEN)Servicios detenidos$(NC)"
 
 restart: ## Reiniciar todos los servicios Docker
 	@echo "$(YELLOW)Reiniciando servicios...$(NC)"
-	docker-compose down
-	docker-compose up -d --build
+	$(DC) down
+	$(DC) up -d --build
 	@echo "$(GREEN)Servicios reiniciados$(NC)"
 
 logs: ## Ver logs de todos los servicios
-	docker-compose logs -f
+	$(DC) logs -f
 
 status: ## Ver estado de los servicios
 	@echo "$(GREEN)Estado de los servicios:$(NC)"
-	@docker-compose ps
+	@$(DC) ps
 
 build: ## Construir imágenes Docker
 	@echo "$(GREEN)Construyendo imágenes...$(NC)"
-	docker-compose build
+	$(DC) build
 	@echo "$(GREEN)Imágenes construidas$(NC)"
 
 db-init: ## Inicializar la base de datos
 	@echo "$(GREEN)Inicializando base de datos...$(NC)"
-	@docker-compose exec db psql -U user -d ses_dashboard -f /docker-entrypoint-initdb.d/init.sql
+	@$(DC) exec db psql -U user -d ses_dashboard -f /docker-entrypoint-initdb.d/init.sql
 	@echo "$(GREEN)Base de datos inicializada$(NC)"
 
 clean: ## Eliminar contenedores, volúmenes e imágenes
 	@echo "$(RED)Eliminando todo...$(NC)"
-	docker-compose down -v --rmi all
+	$(DC) down -v --rmi all
 	@echo "$(GREEN)Limpieza completada$(NC)"
