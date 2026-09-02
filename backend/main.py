@@ -2,21 +2,19 @@ import os
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from routers import emails, auth
+from routers import emails, auth, tenants, webhooks
+from middleware.tenant import TenantMiddleware
 from db.database import init_pool, shutdown_pool
 import uvicorn
 
-# Configurar logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="SES Mail Dashboard", version="1.0.0")
+app = FastAPI(title="SES Mail Dashboard", version="2.0.0")
 
-# CORS restrictivo — solo orígenes permitidos
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8080,http://localhost:8088").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -26,13 +24,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(TenantMiddleware)
+
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(tenants.router, prefix="/api/tenants", tags=["tenants"])
 app.include_router(emails.router, prefix="/api/emails", tags=["emails"])
+app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 
 
 @app.on_event("startup")
 async def startup():
-    logger.info("Iniciando SES Mail Dashboard...")
+    logger.info("Iniciando SES Mail Dashboard v2.0 (Multi-Tenant)...")
     await init_pool()
     logger.info("Pool de conexiones inicializado")
 
@@ -41,7 +43,6 @@ async def startup():
 async def shutdown():
     logger.info("Apagando SES Mail Dashboard...")
     await shutdown_pool()
-    logger.info("Pool de conexiones cerrado")
 
 
 @app.get("/api/health")
@@ -51,7 +52,7 @@ async def health():
         pool = await get_pool()
         async with pool.acquire() as conn:
             await conn.fetchval("SELECT 1")
-        return {"status": "ok", "database": "connected"}
+        return {"status": "ok", "database": "connected", "version": "2.0.0"}
     except Exception as e:
         logger.error("Health check falló: %s", e)
         return {"status": "degraded", "database": "disconnected", "error": str(e)}
