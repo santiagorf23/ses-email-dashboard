@@ -2179,6 +2179,167 @@
       color: var(--red);
       font-size: 12px
     }
+
+    /* ═══ ALERTS VIEW ═══ */
+    .view-alerts .view-content {
+      padding: 20px;
+    }
+
+    .alerts-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .alert-stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .alert-stat-card.critical {
+      border-color: rgba(252, 165, 165, .3);
+      background: var(--red-dim);
+    }
+
+    .alert-stat-card.warning {
+      border-color: rgba(253, 186, 116, .3);
+      background: var(--orange-dim);
+    }
+
+    .alert-stat-card.unread {
+      border-color: rgba(147, 197, 253, .3);
+      background: var(--blue-dim);
+    }
+
+    .alert-stat-value {
+      font-family: var(--display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .alert-stat-card.critical .alert-stat-value { color: var(--red); }
+    .alert-stat-card.warning .alert-stat-value { color: var(--orange); }
+    .alert-stat-card.unread .alert-stat-value { color: var(--blue); }
+
+    .alert-stat-label {
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-top: 4px;
+    }
+
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alert-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: all var(--t);
+    }
+
+    .alert-item:hover {
+      border-color: var(--border2);
+    }
+
+    .alert-item.unread {
+      border-left: 3px solid var(--accent);
+    }
+
+    .alert-item.critical {
+      border-left-color: var(--red);
+    }
+
+    .alert-item.warning {
+      border-left-color: var(--orange);
+    }
+
+    .alert-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    .alert-item.critical .alert-icon {
+      background: var(--red-dim);
+      color: var(--red);
+    }
+
+    .alert-item.warning .alert-icon {
+      background: var(--orange-dim);
+      color: var(--orange);
+    }
+
+    .alert-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .alert-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .alert-message {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .alert-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      color: var(--text3);
+      font-family: var(--mono);
+    }
+
+    .alert-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .alert-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      transition: all var(--t);
+    }
+
+    .alert-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .alert-btn.resolve {
+      background: var(--accent-dim);
+      border-color: rgba(94, 234, 212, .3);
+      color: var(--accent);
+    }
   </style>
   <!-- Chart.js loaded by analytics.html when needed -->
 </head>
@@ -2270,6 +2431,14 @@
           <span class="asb-item-label">Complaint</span>
           <span class="asb-item-count" id="fnav-complaint">—</span>
         </button>
+
+        <div class="asb-section-label" style="margin-top: 8px">Sistema</div>
+        
+        <button class="asb-item" id="nav-alerts" onclick="showView('alerts')" data-tooltip="Alertas">
+          <span class="asb-item-dot" style="background:var(--orange)"></span>
+          <span class="asb-item-label">Alertas</span>
+          <span class="asb-item-count" id="alerts-count" style="display:none">0</span>
+        </button>
       </nav>
 
       <!-- Footer -->
@@ -2352,6 +2521,37 @@
               <tbody id="blocked-tbody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div id="view-alerts" class="view-alerts" style="display:none">
+        <div class="topbar">
+          <span class="topbar-title">Alertas de Deliverability</span>
+          <div class="topbar-filters">
+            <button class="btn-icon" onclick="checkAlerts()" title="Verificar alertas">↻</button>
+          </div>
+        </div>
+        <div class="view-content">
+          <div class="alerts-stats" id="alerts-stats">
+            <div class="alert-stat-card">
+              <div class="alert-stat-value" id="stat-total-alerts">0</div>
+              <div class="alert-stat-label">Total</div>
+            </div>
+            <div class="alert-stat-card critical">
+              <div class="alert-stat-value" id="stat-critical-alerts">0</div>
+              <div class="alert-stat-label">Críticas</div>
+            </div>
+            <div class="alert-stat-card warning">
+              <div class="alert-stat-value" id="stat-warning-alerts">0</div>
+              <div class="alert-stat-label">Advertencias</div>
+            </div>
+            <div class="alert-stat-card unread">
+              <div class="alert-stat-value" id="stat-unread-alerts">0</div>
+              <div class="alert-stat-label">No leídas</div>
+            </div>
+          </div>
+          <div class="alerts-list" id="alerts-list"></div>
         </div>
       </div>
 
@@ -2708,10 +2908,89 @@
       }
     }
 
+    // ── ALERTS VIEW ───────────────────────────────────────
+    async function loadAlerts() {
+      try {
+        const [stats, alerts] = await Promise.all([
+          apiFetch('/alerts/stats'),
+          apiFetch('/alerts')
+        ]);
+        
+        // Update stats
+        document.getElementById('stat-total-alerts').textContent = stats.total_alerts;
+        document.getElementById('stat-critical-alerts').textContent = stats.critical_alerts;
+        document.getElementById('stat-warning-alerts').textContent = stats.warning_alerts;
+        document.getElementById('stat-unread-alerts').textContent = stats.unread_alerts;
+        
+        // Update sidebar badge
+        const badge = document.getElementById('alerts-count');
+        if (stats.unread_alerts > 0) {
+          badge.textContent = stats.unread_alerts;
+          badge.style.display = '';
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        // Render alerts list
+        const list = document.getElementById('alerts-list');
+        if (alerts.length === 0) {
+          list.innerHTML = '<div class="empty-state">No hay alertas. Tu deliverability está saludable.</div>';
+          return;
+        }
+        
+        list.innerHTML = alerts.map(a => `
+          <div class="alert-item ${a.severity} ${a.is_read ? '' : 'unread'}">
+            <div class="alert-icon">${a.severity === 'critical' ? '⚠' : '⚡'}</div>
+            <div class="alert-content">
+              <div class="alert-title">${esc(a.title)}</div>
+              <div class="alert-message">${esc(a.message)}</div>
+              <div class="alert-meta">
+                <span>${a.alert_type}</span>
+                <span>${fmtDateFull(a.created_at)}</span>
+              </div>
+            </div>
+            <div class="alert-actions">
+              ${!a.is_read ? `<button class="alert-btn" onclick="markAlertRead(${a.id})">Marcar leída</button>` : ''}
+              ${!a.is_resolved ? `<button class="alert-btn resolve" onclick="resolveAlert(${a.id})">Resolver</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Error loading alerts:', e);
+      }
+    }
+
+    async function checkAlerts() {
+      try {
+        await apiFetch('/alerts/check', { method: 'POST' });
+        loadAlerts();
+      } catch (e) {
+        console.error('Error checking alerts:', e);
+      }
+    }
+
+    async function markAlertRead(id) {
+      try {
+        await apiFetch(`/alerts/${id}/read`, { method: 'PUT' });
+        loadAlerts();
+      } catch (e) {
+        console.error('Error marking alert:', e);
+      }
+    }
+
+    async function resolveAlert(id) {
+      try {
+        await apiFetch(`/alerts/${id}/resolve`, { method: 'PUT' });
+        loadAlerts();
+      } catch (e) {
+        console.error('Error resolving alert:', e);
+      }
+    }
+
     // ── NAV ───────────────────────────────────────────────
     function showView(v) {
       document.querySelectorAll('.asb-item').forEach(el => el.classList.remove('active'));
-      ['inbox', 'blocked'].forEach(id => {
+      ['inbox', 'blocked', 'alerts'].forEach(id => {
         const el = document.getElementById('view-' + id);
         if (el) el.style.display = 'none';
       });
@@ -2719,6 +2998,11 @@
         document.getElementById('nav-inbox').classList.add('active');
         const inbox = document.getElementById('view-inbox');
         inbox.style.display = '';
+      } else if (v === 'alerts') {
+        document.getElementById('nav-alerts').classList.add('active');
+        const alerts = document.getElementById('view-alerts');
+        alerts.style.display = '';
+        loadAlerts();
       } else {
         document.getElementById('nav-blocked').classList.add('active');
         const blocked = document.getElementById('view-blocked');
