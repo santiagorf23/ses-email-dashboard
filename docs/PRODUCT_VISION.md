@@ -36,14 +36,14 @@ Sistema funcional de monitoreo de emails transaccionales via AWS SES:
 
 ### 🟡 Diferenciadoras (Pro/Business)
 
-| Feature                                | Descripción                                                                       | Impacto                           |
-| -------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------- |
-| **Email verification**           | Verificar lista de correos antes de enviar (validación DNS, disposable detection) | Ahorra dinero en envíos fallidos |
-| **A/B testing de asuntos**       | Comparar open rates entre variantes de subject line                                | Optimización de campañas        |
-| **Heatmap de engagement**        | Qué horarios/días tienen mejor open rate                                         | Mejora timing de envíos          |
-| **Integración directa con SES** | Enviar correos desde el dashboard via SES API                                      | Todo-en-uno                       |
-| **Slack/Email alerts**           | Recibir notificaciones de bounce/complaint en Slack o email                        | Monitoreo pasivo                  |
-| **Exportación de reportes**     | PDF/CSV programados (diario/semanal/mensual)                                       | Para managers y equipos           |
+| Feature                                | Descripción                                                                       | Impacto                           | Estado |
+| -------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------- | ------ |
+| **Email verification**           | Verificar lista de correos antes de enviar (validación DNS, disposable detection) | Ahorra dinero en envíos fallidos | ⏳ Pendiente |
+| **A/B testing de asuntos**       | Comparar open rates entre variantes de subject line                                | Optimización de campañas        | ⏳ Pendiente |
+| **Heatmap de engagement**        | Qué horarios/días tienen mejor open rate                                         | Mejora timing de envíos          | ⏳ Pendiente |
+| **Integración directa con SES** | Enviar correos desde el dashboard via SES API                                      | Todo-en-uno                       | ⏳ Pendiente |
+| **Slack/Email alerts**           | Recibir notificaciones de bounce/complaint en Slack o email                        | Monitoreo pasivo                  | ✅ Completado |
+| **Exportación de reportes**     | PDF/CSV programados (diario/semanal/mensual)                                       | Para managers y equipos           | ✅ Completado |
 
 ### 🟢 Premium (Enterprise)
 
