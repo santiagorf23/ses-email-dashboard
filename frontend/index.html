@@ -619,6 +619,42 @@
       display: block;
     }
 
+    /* Expand strip (visible when collapsed) */
+    .sb-expand-strip {
+      display: none;
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 56px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: none;
+      border-radius: 0 6px 6px 0;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 11;
+      color: var(--text3);
+      font-size: 11px;
+      transition: all var(--t);
+      padding: 0;
+    }
+
+    .sb-expand-strip:hover {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .an-sidebar.collapsed .sb-expand-strip {
+      display: flex;
+    }
+
+    .an-sidebar:not(.collapsed) .sb-expand-strip {
+      display: none;
+    }
+
     /* Mobile sidebar */
     @media (max-width: 768px) {
       .an-sidebar {
@@ -2179,6 +2215,9 @@
 
     <!-- SIDEBAR — Unified clean design -->
     <aside class="an-sidebar" id="an-sidebar" aria-label="Menú lateral">
+      <!-- Expand strip (visible when collapsed) -->
+      <div class="sb-expand-strip" id="sb-expand" onclick="toggleSidebar()" title="Expandir menú">›</div>
+
       <!-- Brand -->
       <div class="asb-brand">
         <div class="asb-logo">✦</div>
