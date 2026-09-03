@@ -98,6 +98,21 @@
                   <div class="export-option-sub">Incluye resumen de métricas</div>
                 </div>
               </div>
+              <div class="export-divider"></div>
+              <div id="export-deliverability-csv" class="export-option" role="menuitem" tabindex="0" onclick="exportDeliverabilityCSV()">
+                <span class="export-option-icon" aria-hidden="true">📈</span>
+                <div>
+                  <div>Reporte Deliverability CSV</div>
+                  <div class="export-option-sub">Score por dominio, tendencias</div>
+                </div>
+              </div>
+              <div id="export-deliverability-pdf" class="export-option" role="menuitem" tabindex="0" onclick="exportDeliverabilityPDF()">
+                <span class="export-option-icon" aria-hidden="true">📋</span>
+                <div>
+                  <div>Reporte Deliverability PDF</div>
+                  <div class="export-option-sub">Reporte completo con diseño profesional</div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -318,7 +333,45 @@
       if (!localStorage.getItem('ses_token')) {
         window.location.href = 'index.html';
       }
-    }());
+    })();
+
+    // Export deliverability reports
+    function exportDeliverabilityCSV() {
+      const token = localStorage.getItem('ses_token');
+      const days = getSelectedDays();
+      window.location.href = `${CONFIG.API_BASE_URL}/reports/export/csv?days=${days}`;
+    }
+
+    function exportDeliverabilityPDF() {
+      const token = localStorage.getItem('ses_token');
+      const days = getSelectedDays();
+      window.open(`${CONFIG.API_BASE_URL}/reports/export/pdf?days=${days}`, '_blank');
+    }
+
+    function getSelectedDays() {
+      const activePill = document.querySelector('.an-pill.active');
+      return activePill ? activePill.dataset.days : 30;
+    }
+
+    // Export dropdown toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const exportBtn = document.getElementById('btn-export');
+      const exportDropdown = document.getElementById('export-dropdown');
+      
+      if (exportBtn && exportDropdown) {
+        exportBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isExpanded = exportBtn.getAttribute('aria-expanded') === 'true';
+          exportBtn.setAttribute('aria-expanded', !isExpanded);
+          exportDropdown.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', function() {
+          exportBtn.setAttribute('aria-expanded', 'false');
+          exportDropdown.classList.remove('show');
+        });
+      }
+    });
   </script>
 
 </body>

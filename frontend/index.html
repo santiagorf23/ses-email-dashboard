@@ -2185,6 +2185,76 @@
       padding: 20px;
     }
 
+    .notification-settings {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .settings-header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+    }
+
+    .btn-close:hover {
+      color: var(--text);
+    }
+
+    .settings-body {
+      padding: 20px;
+    }
+
+    .settings-section {
+      margin-bottom: 20px;
+    }
+
+    .settings-section h4 {
+      margin: 0 0 12px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--r);
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
     .alerts-stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -2535,9 +2605,60 @@
           <span class="topbar-title">Alertas de Deliverability</span>
           <div class="topbar-filters">
             <button class="btn-icon" onclick="checkAlerts()" title="Verificar alertas">↻</button>
+            <button class="btn-icon" onclick="toggleNotificationSettings()" title="Configurar notificaciones">⚙</button>
           </div>
         </div>
         <div class="view-content">
+          <!-- Notification Settings Panel -->
+          <div class="notification-settings" id="notification-settings" style="display:none">
+            <div class="settings-header">
+              <h3>Configuración de Notificaciones</h3>
+              <button class="btn-close" onclick="toggleNotificationSettings()">✕</button>
+            </div>
+            <div class="settings-body">
+              <div class="settings-section">
+                <h4>Slack</h4>
+                <div class="field">
+                  <label>Webhook URL</label>
+                  <input type="url" id="slack-webhook-url" placeholder="https://hooks.slack.com/services/...">
+                </div>
+              </div>
+              <div class="settings-section">
+                <h4>Email</h4>
+                <div class="field">
+                  <label>
+                    <input type="checkbox" id="email-enabled"> Habilitar notificaciones por email
+                  </label>
+                </div>
+                <div class="field">
+                  <label>Email destino</label>
+                  <input type="email" id="email-to" placeholder="admin@empresa.com">
+                </div>
+                <div class="field">
+                  <label>SMTP Host</label>
+                  <input type="text" id="smtp-host" placeholder="smtp.gmail.com">
+                </div>
+                <div class="field">
+                  <label>SMTP Puerto</label>
+                  <input type="number" id="smtp-port" value="587">
+                </div>
+                <div class="field">
+                  <label>SMTP Usuario</label>
+                  <input type="text" id="smtp-user" placeholder="usuario@gmail.com">
+                </div>
+                <div class="field">
+                  <label>SMTP Contraseña</label>
+                  <input type="password" id="smtp-password" placeholder="••••••••">
+                </div>
+                <div class="field">
+                  <label>Email remitente</label>
+                  <input type="email" id="from-email" placeholder="alerts@empresa.com">
+                </div>
+              </div>
+              <button class="btn-primary" onclick="saveNotificationConfig()">Guardar configuración</button>
+            </div>
+          </div>
+          
           <div class="alerts-stats" id="alerts-stats">
             <div class="alert-stat-card">
               <div class="alert-stat-value" id="stat-total-alerts">0</div>
@@ -2989,6 +3110,56 @@
         loadAlerts();
       } catch (e) {
         console.error('Error resolving alert:', e);
+      }
+    }
+
+    // ── NOTIFICATION SETTINGS ──────────────────────────────
+    async function toggleNotificationSettings() {
+      const panel = document.getElementById('notification-settings');
+      if (panel.style.display === 'none') {
+        panel.style.display = '';
+        await loadNotificationConfig();
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+
+    async function loadNotificationConfig() {
+      try {
+        const config = await apiFetch('/alerts/notifications');
+        document.getElementById('slack-webhook-url').value = config.slack_webhook_url || '';
+        document.getElementById('email-enabled').checked = config.email_enabled || false;
+        document.getElementById('email-to').value = config.email_to || '';
+        document.getElementById('smtp-host').value = config.smtp_host || '';
+        document.getElementById('smtp-port').value = config.smtp_port || 587;
+        document.getElementById('smtp-user').value = config.smtp_user || '';
+        document.getElementById('smtp-password').value = config.smtp_password || '';
+        document.getElementById('from-email').value = config.from_email || '';
+      } catch (e) {
+        console.error('Error loading notification config:', e);
+      }
+    }
+
+    async function saveNotificationConfig() {
+      try {
+        const config = {
+          slack_webhook_url: document.getElementById('slack-webhook-url').value || null,
+          email_enabled: document.getElementById('email-enabled').checked,
+          email_to: document.getElementById('email-to').value || null,
+          smtp_host: document.getElementById('smtp-host').value || null,
+          smtp_port: parseInt(document.getElementById('smtp-port').value) || 587,
+          smtp_user: document.getElementById('smtp-user').value || null,
+          smtp_password: document.getElementById('smtp-password').value || null,
+          from_email: document.getElementById('from-email').value || null
+        };
+        await apiFetch('/alerts/notifications', {
+          method: 'PUT',
+          body: JSON.stringify(config)
+        });
+        showToast('Configuración guardada');
+      } catch (e) {
+        console.error('Error saving notification config:', e);
+        showToast('Error al guardar configuración');
       }
     }
 
