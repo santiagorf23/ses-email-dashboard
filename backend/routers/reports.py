@@ -22,8 +22,8 @@ class DomainReport(BaseModel):
     bounce_rate: float
     complaint_rate: float
     open_rate: float
-    reputation_score: int  # 0-100
-    reputation_label: str  # excellent, good, fair, poor
+    reputation_score: int
+    reputation_label: str
 
 
 class TrendDataPoint(BaseModel):
@@ -53,17 +53,9 @@ class DeliverabilityReport(BaseModel):
     trends: list[TrendDataPoint]
 
 
-@router.get("", response_model=DeliverabilityReport)
-async def get_deliverability_report(
-    days: int = Query(30, ge=1, le=365),
-    conn=Depends(get_conn),
-    current_user: dict = Depends(get_current_user)
-):
-    """Get deliverability report for current tenant."""
-    tenant_id = current_user["tenant_id"]
-    
-    # Get overall stats
-    overall = await conn.fetchrow("""
+async def _get_overall_stats(conn, tenant_id: int, days: int) -> dict:
+    """Get overall stats for a tenant."""
+    row = await conn.fetchrow("""
         SELECT 
             COUNT(DISTINCT es.id) as total_sent,
             COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'delivery' THEN ee.email_send_id END) as total_delivered,
@@ -76,125 +68,27 @@ async def get_deliverability_report(
         AND es.created_at >= NOW() - INTERVAL '1 day' * $2
     """, tenant_id, days)
     
-    total_sent = overall["total_sent"] or 0
-    total_delivered = overall["total_delivered"] or 0
-    total_bounced = overall["total_bounced"] or 0
-    total_complaints = overall["total_complaints"] or 0
-    total_opened = overall["total_opened"] or 0
+    total_sent = row["total_sent"] or 0
+    total_delivered = row["total_delivered"] or 0
+    total_bounced = row["total_bounced"] or 0
+    total_complaints = row["total_complaints"] or 0
+    total_opened = row["total_opened"] or 0
     
-    # Get domain breakdown
-    domain_rows = await conn.fetch("""
-        SELECT 
-            SPLIT_PART(es.email_from, '@', 2) as domain,
-            COUNT(DISTINCT es.id) as total_sent,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'delivery' THEN ee.email_send_id END) as total_delivered,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'bounce' THEN ee.email_send_id END) as total_bounced,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'complaint' THEN ee.email_send_id END) as total_complaints,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'open' THEN ee.email_send_id END) as total_opened
-        FROM email_send es
-        LEFT JOIN email_events ee ON es.id = ee.email_send_id AND ee.tenant_id = $1
-        WHERE es.tenant_id = $1 
-        AND es.created_at >= NOW() - INTERVAL '1 day' * $2
-        GROUP BY SPLIT_PART(es.email_from, '@', 2)
-        ORDER BY total_sent DESC
-    """, tenant_id, days)
-    
-    domains = []
-    for row in domain_rows:
-        d = dict(row)
-        d_sent = d["total_sent"] or 0
-        d_delivered = d["total_delivered"] or 0
-        d_bounced = d["total_bounced"] or 0
-        d_complaints = d["total_complaints"] or 0
-        d_opened = d["total_opened"] or 0
-        
-        delivery_rate = (d_delivered / d_sent * 100) if d_sent > 0 else 0
-        bounce_rate = (d_bounced / d_sent * 100) if d_sent > 0 else 0
-        complaint_rate = (d_complaints / d_sent * 100) if d_sent > 0 else 0
-        open_rate = (d_opened / d_delivered * 100) if d_delivered > 0 else 0
-        
-        # Calculate reputation score (0-100)
-        score = _calculate_reputation_score(delivery_rate, bounce_rate, complaint_rate, open_rate)
-        label = _get_reputation_label(score)
-        
-        domains.append(DomainReport(
-            domain=d["domain"],
-            total_sent=d_sent,
-            total_delivered=d_delivered,
-            total_bounced=d_bounced,
-            total_complaints=d_complaints,
-            total_opened=d_opened,
-            delivery_rate=round(delivery_rate, 2),
-            bounce_rate=round(bounce_rate, 2),
-            complaint_rate=round(complaint_rate, 2),
-            open_rate=round(open_rate, 2),
-            reputation_score=score,
-            reputation_label=label
-        ))
-    
-    # Get daily trends
-    trend_rows = await conn.fetch("""
-        SELECT 
-            DATE(es.created_at) as date,
-            COUNT(DISTINCT es.id) as sent,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'delivery' THEN ee.email_send_id END) as delivered,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'bounce' THEN ee.email_send_id END) as bounced,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'complaint' THEN ee.email_send_id END) as complaints,
-            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'open' THEN ee.email_send_id END) as opened
-        FROM email_send es
-        LEFT JOIN email_events ee ON es.id = ee.email_send_id AND ee.tenant_id = $1
-        WHERE es.tenant_id = $1 
-        AND es.created_at >= NOW() - INTERVAL '1 day' * $2
-        GROUP BY DATE(es.created_at)
-        ORDER BY date ASC
-    """, tenant_id, days)
-    
-    trends = []
-    for row in trend_rows:
-        t = dict(row)
-        t_sent = t["sent"] or 0
-        t_delivered = t["delivered"] or 0
-        t_bounced = t["bounced"] or 0
-        t_complaints = t["complaints"] or 0
-        t_opened = t["opened"] or 0
-        
-        trends.append(TrendDataPoint(
-            date=str(t["date"]),
-            sent=t_sent,
-            delivered=t_delivered,
-            bounced=t_bounced,
-            complaints=t_complaints,
-            opened=t_opened,
-            delivery_rate=round((t_delivered / t_sent * 100) if t_sent > 0 else 0, 2),
-            bounce_rate=round((t_bounced / t_sent * 100) if t_sent > 0 else 0, 2),
-            complaint_rate=round((t_complaints / t_sent * 100) if t_sent > 0 else 0, 2)
-        ))
-    
-    return DeliverabilityReport(
-        period_days=days,
-        total_sent=total_sent,
-        total_delivered=total_delivered,
-        total_bounced=total_bounced,
-        total_complaints=total_complaints,
-        total_opened=total_opened,
-        overall_delivery_rate=round((total_delivered / total_sent * 100) if total_sent > 0 else 0, 2),
-        overall_bounce_rate=round((total_bounced / total_sent * 100) if total_sent > 0 else 0, 2),
-        overall_complaint_rate=round((total_complaints / total_sent * 100) if total_sent > 0 else 0, 2),
-        overall_open_rate=round((total_opened / total_delivered * 100) if total_delivered > 0 else 0, 2),
-        domains=domains,
-        trends=trends
-    )
+    return {
+        "total_sent": total_sent,
+        "total_delivered": total_delivered,
+        "total_bounced": total_bounced,
+        "total_complaints": total_complaints,
+        "total_opened": total_opened,
+        "delivery_rate": round((total_delivered / total_sent * 100) if total_sent > 0 else 0, 2),
+        "bounce_rate": round((total_bounced / total_sent * 100) if total_sent > 0 else 0, 2),
+        "complaint_rate": round((total_complaints / total_sent * 100) if total_sent > 0 else 0, 2),
+        "open_rate": round((total_opened / total_delivered * 100) if total_delivered > 0 else 0, 2)
+    }
 
 
-@router.get("/domains", response_model=list[DomainReport])
-async def get_domain_reports(
-    days: int = Query(30, ge=1, le=365),
-    conn=Depends(get_conn),
-    current_user: dict = Depends(get_current_user)
-):
-    """Get per-domain deliverability reports."""
-    tenant_id = current_user["tenant_id"]
-    
+async def _get_domain_report_data(conn, tenant_id: int, days: int) -> list[dict]:
+    """Get domain report data."""
     rows = await conn.fetch("""
         SELECT 
             SPLIT_PART(es.email_from, '@', 2) as domain,
@@ -228,22 +122,105 @@ async def get_domain_reports(
         score = _calculate_reputation_score(delivery_rate, bounce_rate, complaint_rate, open_rate)
         label = _get_reputation_label(score)
         
-        results.append(DomainReport(
-            domain=d["domain"],
-            total_sent=d_sent,
-            total_delivered=d_delivered,
-            total_bounced=d_bounced,
-            total_complaints=d_complaints,
-            total_opened=d_opened,
-            delivery_rate=round(delivery_rate, 2),
-            bounce_rate=round(bounce_rate, 2),
-            complaint_rate=round(complaint_rate, 2),
-            open_rate=round(open_rate, 2),
-            reputation_score=score,
-            reputation_label=label
-        ))
+        results.append({
+            "domain": d["domain"],
+            "total_sent": d_sent,
+            "total_delivered": d_delivered,
+            "total_bounced": d_bounced,
+            "total_complaints": d_complaints,
+            "total_opened": d_opened,
+            "delivery_rate": round(delivery_rate, 2),
+            "bounce_rate": round(bounce_rate, 2),
+            "complaint_rate": round(complaint_rate, 2),
+            "open_rate": round(open_rate, 2),
+            "reputation_score": score,
+            "reputation_label": label
+        })
     
     return results
+
+
+async def _get_trend_data(conn, tenant_id: int, days: int) -> list[dict]:
+    """Get trend data."""
+    rows = await conn.fetch("""
+        SELECT 
+            DATE(es.created_at) as date,
+            COUNT(DISTINCT es.id) as sent,
+            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'delivery' THEN ee.email_send_id END) as delivered,
+            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'bounce' THEN ee.email_send_id END) as bounced,
+            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'complaint' THEN ee.email_send_id END) as complaints,
+            COUNT(DISTINCT CASE WHEN LOWER(ee.event_type) = 'open' THEN ee.email_send_id END) as opened
+        FROM email_send es
+        LEFT JOIN email_events ee ON es.id = ee.email_send_id AND ee.tenant_id = $1
+        WHERE es.tenant_id = $1 
+        AND es.created_at >= NOW() - INTERVAL '1 day' * $2
+        GROUP BY DATE(es.created_at)
+        ORDER BY date ASC
+    """, tenant_id, days)
+    
+    results = []
+    for row in rows:
+        t = dict(row)
+        t_sent = t["sent"] or 0
+        t_delivered = t["delivered"] or 0
+        t_bounced = t["bounced"] or 0
+        t_complaints = t["complaints"] or 0
+        t_opened = t["opened"] or 0
+        
+        results.append({
+            "date": str(t["date"]),
+            "sent": t_sent,
+            "delivered": t_delivered,
+            "bounced": t_bounced,
+            "complaints": t_complaints,
+            "opened": t_opened,
+            "delivery_rate": round((t_delivered / t_sent * 100) if t_sent > 0 else 0, 2),
+            "bounce_rate": round((t_bounced / t_sent * 100) if t_sent > 0 else 0, 2),
+            "complaint_rate": round((t_complaints / t_sent * 100) if t_sent > 0 else 0, 2)
+        })
+    
+    return results
+
+
+@router.get("", response_model=DeliverabilityReport)
+async def get_deliverability_report(
+    days: int = Query(30, ge=1, le=365),
+    conn=Depends(get_conn),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get deliverability report for current tenant."""
+    tenant_id = current_user["tenant_id"]
+    
+    overall = await _get_overall_stats(conn, tenant_id, days)
+    domains = await _get_domain_report_data(conn, tenant_id, days)
+    trends = await _get_trend_data(conn, tenant_id, days)
+    
+    return DeliverabilityReport(
+        period_days=days,
+        total_sent=overall["total_sent"],
+        total_delivered=overall["total_delivered"],
+        total_bounced=overall["total_bounced"],
+        total_complaints=overall["total_complaints"],
+        total_opened=overall["total_opened"],
+        overall_delivery_rate=overall["delivery_rate"],
+        overall_bounce_rate=overall["bounce_rate"],
+        overall_complaint_rate=overall["complaint_rate"],
+        overall_open_rate=overall["open_rate"],
+        domains=[DomainReport(**d) for d in domains],
+        trends=[TrendDataPoint(**t) for t in trends]
+    )
+
+
+@router.get("/domains", response_model=list[DomainReport])
+async def get_domain_reports(
+    days: int = Query(30, ge=1, le=365),
+    conn=Depends(get_conn),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get per-domain deliverability reports."""
+    tenant_id = current_user["tenant_id"]
+    domains = await _get_domain_report_data(conn, tenant_id, days)
+    return [DomainReport(**d) for d in domains]
 
 
 def _calculate_reputation_score(delivery_rate: float, bounce_rate: float, complaint_rate: float, open_rate: float) -> int:

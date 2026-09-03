@@ -1,12 +1,15 @@
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from db.database import get_conn
 from models.alert import (
     AlertConfigBase, AlertConfigUpdate, AlertConfigResponse,
     Alert, AlertStats
 )
 from routers.auth import get_current_user
+from services.notifications import notify_alert_created
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +79,70 @@ async def update_alert_config(
         """, tenant_id)
     
     return AlertConfigResponse(**dict(row))
+
+
+class NotificationConfig(BaseModel):
+    """Notification configuration for a tenant."""
+    slack_webhook_url: Optional[str] = None
+    email_enabled: bool = False
+    email_to: Optional[str] = None
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    from_email: Optional[str] = None
+
+
+@router.get("/notifications")
+async def get_notification_config(
+    conn=Depends(get_conn),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get notification configuration for current tenant."""
+    tenant_id = current_user["tenant_id"]
+    
+    row = await conn.fetchrow("""
+        SELECT notification_config FROM tenants WHERE id = $1
+    """, tenant_id)
+    
+    if not row or not row["notification_config"]:
+        return {
+            "slack_webhook_url": None,
+            "email_enabled": False,
+            "email_to": None,
+            "smtp_host": None,
+            "smtp_port": 587,
+            "smtp_user": None,
+            "smtp_password": None,
+            "from_email": None
+        }
+    
+    # Handle both dict and string cases
+    config = row["notification_config"]
+    if isinstance(config, str):
+        import json
+        config = json.loads(config)
+    
+    return config
+
+
+@router.put("/notifications")
+async def update_notification_config(
+    config: NotificationConfig,
+    conn=Depends(get_conn),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update notification configuration for current tenant."""
+    import json
+    tenant_id = current_user["tenant_id"]
+    
+    await conn.execute("""
+        UPDATE tenants 
+        SET notification_config = $1, updated_at = NOW()
+        WHERE id = $2
+    """, json.dumps(config.model_dump()), tenant_id)
+    
+    return {"status": "updated"}
 
 
 @router.get("", response_model=list[Alert])
@@ -357,9 +424,31 @@ async def _create_alert(
     if existing:
         return  # Don't create duplicate
     
-    await conn.execute("""
+    # Insert alert
+    alert_id = await conn.fetchval("""
         INSERT INTO alerts (tenant_id, alert_type, severity, title, message, current_value, threshold_value)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
     """, tenant_id, alert_type, severity, title, message, current_value, threshold_value)
     
     logger.warning("Alert created for tenant %d: %s - %s", tenant_id, alert_type, title)
+    
+    # Send notifications asynchronously
+    try:
+        alert_data = {
+            "id": alert_id,
+            "alert_type": alert_type,
+            "severity": severity,
+            "title": title,
+            "message": message,
+            "current_value": current_value,
+            "threshold_value": threshold_value,
+            "domain": None
+        }
+        
+        # Get tenant notification config (default empty)
+        tenant_config = {}
+        
+        await notify_alert_created({}, alert_data, tenant_config)
+    except Exception as e:
+        logger.error(f"Failed to send notification: {e}")
