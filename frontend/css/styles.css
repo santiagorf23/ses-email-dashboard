@@ -1481,7 +1481,8 @@ a:focus-visible {
    §26  VIEW LAYOUTS & CHART HEIGHTS
    ═══════════════════════════════════════════════════ */
 .view-inbox,
-.view-blocked {
+.view-blocked,
+.view-alerts {
   display: flex;
   flex-direction: column;
   height: 100%;

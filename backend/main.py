@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import emails, auth, tenants, webhooks, onboarding
+from routers import emails, auth, tenants, webhooks, onboarding, alerts
 from middleware.tenant import TenantMiddleware
 from db.database import init_pool, shutdown_pool
 import uvicorn
@@ -31,6 +31,7 @@ app.include_router(tenants.router, prefix="/api/tenants", tags=["tenants"])
 app.include_router(emails.router, prefix="/api/emails", tags=["emails"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboarding"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 
 
 @app.on_event("startup")
