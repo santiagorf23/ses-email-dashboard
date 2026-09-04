@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import emails, auth, tenants, webhooks, onboarding, alerts, reports, export
+from routers import emails, auth, tenants, webhooks, onboarding, alerts, reports, export, email_verification, ab_testing, heatmap, ses_send
 from middleware.tenant import TenantMiddleware
 from db.database import init_pool, shutdown_pool
 import uvicorn
@@ -34,6 +34,10 @@ app.include_router(onboarding.router, prefix="/api/onboarding", tags=["onboardin
 app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(export.router, prefix="/api/reports/export", tags=["export"])
+app.include_router(email_verification.router, prefix="/api/verification", tags=["verification"])
+app.include_router(ab_testing.router, prefix="/api/ab-tests", tags=["ab-testing"])
+app.include_router(heatmap.router, prefix="/api/heatmap", tags=["heatmap"])
+app.include_router(ses_send.router, prefix="/api/ses", tags=["ses-send"])
 
 
 @app.on_event("startup")
