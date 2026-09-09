@@ -1,5 +1,5 @@
 /**
- * MailTrack — SES Dashboard
+ * MailPulse — SES Dashboard
  * js/alerts.js  v3
  *
  * Lógica de alertas con umbrales configurables.

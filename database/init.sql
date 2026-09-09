@@ -70,6 +70,49 @@ CREATE INDEX IF NOT EXISTS idx_email_send_subject_trgm
     ON email_send USING gin (subject gin_trgm_ops);
 
 -- ============================================================
+-- Tablas de Billing (LemonSqueezy)
+-- ============================================================
+
+-- Suscripciones de usuarios
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id                      SERIAL PRIMARY KEY,
+    tenant_id               INTEGER NOT NULL REFERENCES tenants(id),
+    lemonqueezy_id          VARCHAR(255) UNIQUE,
+    lemonqueezy_customer_id VARCHAR(255),
+    plan_name               VARCHAR(50) NOT NULL DEFAULT 'free',
+    plan_price              DECIMAL(10,2) DEFAULT 0,
+    status                  VARCHAR(50) DEFAULT 'active',
+    billing_cycle           VARCHAR(20) DEFAULT 'monthly',
+    current_period_start    TIMESTAMP,
+    current_period_end      TIMESTAMP,
+    cancel_at               TIMESTAMP,
+    created_at              TIMESTAMP DEFAULT NOW(),
+    updated_at              TIMESTAMP DEFAULT NOW()
+);
+
+-- Facturas
+CREATE TABLE IF NOT EXISTS invoices (
+    id                      SERIAL PRIMARY KEY,
+    tenant_id               INTEGER NOT NULL REFERENCES tenants(id),
+    lemonqueezy_order_id    VARCHAR(255) UNIQUE,
+    amount                  DECIMAL(10,2) NOT NULL,
+    currency                VARCHAR(3) DEFAULT 'USD',
+    status                  VARCHAR(50),
+    invoice_url             TEXT,
+    created_at              TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices para billing
+CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant
+    ON subscriptions (tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status
+    ON subscriptions (status);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_tenant
+    ON invoices (tenant_id, created_at DESC);
+
+-- ============================================================
 -- Datos de prueba (comentar en producción)
 -- ============================================================
 

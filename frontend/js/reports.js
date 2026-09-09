@@ -1,5 +1,5 @@
 /**
- * MailTrack — SES Dashboard
+ * MailPulse — SES Dashboard
  * js/reports.js  v1
  *
  * Genera reportes PDF con:
@@ -369,7 +369,7 @@ const ReportsModule = (() => {
         for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
             _line(doc, PDF.ML, PDF.H - 12, PDF.W - PDF.ML, PDF.H - 12, PDF.C_SURF2, 0.3);
-            _text(doc, 'MailTrack SES Dashboard', PDF.ML, PDF.H - 7, { color: PDF.C_TEXT3, size: 7 });
+            _text(doc, 'MailPulse SES Dashboard', PDF.ML, PDF.H - 7, { color: PDF.C_TEXT3, size: 7 });
             _text(doc, `Pág. ${i} / ${totalPages}`, PDF.W - PDF.ML, PDF.H - 7, { color: PDF.C_TEXT3, size: 7, align: 'right' });
             _text(doc, 'Generado automáticamente · Datos de producción', PDF.W / 2, PDF.H - 7, { color: PDF.C_TEXT3, size: 7, align: 'center' });
         }

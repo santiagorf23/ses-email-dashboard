@@ -1,5 +1,5 @@
 /**
- * MailTrack — SES Dashboard
+ * MailPulse — SES Dashboard
  * js/charts.js  v3
  *
  * ─ Carga datos REALES del backend; fallback a demo si la API no responde.
@@ -83,8 +83,14 @@ const ChartsModule = (() => {
 
       <!-- Brand + collapse -->
       <div class="asb-brand">
-        <div class="asb-logo">✦</div>
-        <span class="asb-name">Mail<em>Track</em></span>
+        <div class="asb-logo">
+          <svg viewBox="0 0 36 28" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="16">
+            <path d="M2 14 L6 14 L8 6 L10 22 L12 8 L14 20 L16 14 L18 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="20" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M20 6 L27 12 L34 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="asb-name">Mail<em>Pulse</em></span>
         <button class="asb-collapse" id="btn-sidebar-collapse" title="Colapsar">‹</button>
       </div>
 
@@ -519,19 +525,19 @@ const ChartsModule = (() => {
                     borderColor: cs.getPropertyValue('--border2').trim() || (light ? '#e2e6ec' : '#2a303a'), borderWidth: 1,
                     titleColor: cs.getPropertyValue('--text').trim() || (light ? '#111827' : '#f0f2f5'),
                     bodyColor: cs.getPropertyValue('--text2').trim() || (light ? '#4b5563' : '#8b95a6'),
-                    titleFont: { family: 'Syne', weight: '700', size: 12 },
-                    bodyFont: { family: 'DM Mono', size: 11 },
+                    titleFont: { family: 'Inter', weight: '700', size: 12 },
+                    bodyFont: { family: 'JetBrains Mono', size: 11 },
                     padding: 10, cornerRadius: 8,
                 },
             },
             scales: {
                 x: {
                     grid: { color: cc.grid, drawBorder: false }, border: { display: false },
-                    ticks: { color: cc.tick, font: { family: 'DM Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 7 }
+                    ticks: { color: cc.tick, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, maxTicksLimit: 7 }
                 },
                 y: {
                     grid: { color: cc.grid, drawBorder: false }, border: { display: false },
-                    ticks: { color: cc.tick, font: { family: 'DM Mono', size: 10 }, precision: 0 }, beginAtZero: true
+                    ticks: { color: cc.tick, font: { family: 'JetBrains Mono', size: 10 }, precision: 0 }, beginAtZero: true
                 },
             },
         };
@@ -616,7 +622,7 @@ const ChartsModule = (() => {
                         borderColor: _s.theme === 'light' ? '#e2e6ec' : '#2a303a', borderWidth: 1,
                         titleColor: _s.theme === 'light' ? '#111827' : '#f0f2f5',
                         bodyColor: _s.theme === 'light' ? '#4b5563' : '#8b95a6',
-                        titleFont: { family: 'Syne', weight: '700', size: 12 }, bodyFont: { family: 'DM Mono', size: 11 },
+                        titleFont: { family: 'Inter', weight: '700', size: 12 }, bodyFont: { family: 'JetBrains Mono', size: 11 },
                         padding: 10, cornerRadius: 8,
                         callbacks: { label: ctx => ` ${ctx.label}: ${Number(ctx.parsed).toLocaleString('es-CO')} (${total > 0 ? (ctx.parsed / total * 100).toFixed(1) : 0}%)` },
                     }
@@ -851,7 +857,7 @@ const ChartsModule = (() => {
 
         const kpis = _computeKPIs(items);
         const rows = [
-            ['MailTrack — Reporte de Analítica'],
+            ['MailPulse — Reporte de Analítica'],
             ['Generado:', new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })],
             ['Período:', _s.period > 0 ? `Últimos ${_s.period} días` : 'Rango personalizado'],
             ['Dominio:', _s.domain || 'Todos'],

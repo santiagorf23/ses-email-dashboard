@@ -1,5 +1,5 @@
 /**
- * MailTrack — SES Dashboard
+ * MailPulse — SES Dashboard
  * js/actions.js  v1
  *
  * Gestiona las acciones sobre correos individuales:

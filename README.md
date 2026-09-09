@@ -213,16 +213,16 @@ Los correos HTML se muestran en un iframe con sandbox restriccivo:
 
 ## ⚙️ Variables de entorno
 
-| Variable         | Descripción                              | Default                    |
-| ---------------- | ---------------------------------------- | -------------------------- |
-| DATABASE_URL     | Cadena de conexión PostgreSQL            | -                          |
-| SECRET_KEY       | Clave para firmar JWT (32+ chars)        | - (requerido)              |
-| ADMIN_USER       | Usuario del dashboard                    | admin                      |
-| ADMIN_PASSWORD   | Contraseña del dashboard                 | - (requerido)              |
-| ALLOWED_ORIGINS  | Orígenes CORS permitidos (coma-separado) | http://localhost:8080,...   |
-| POSTGRES_DB      | Nombre de la base de datos               | ses_dashboard              |
-| POSTGRES_USER    | Usuario de PostgreSQL                    | user                       |
-| POSTGRES_PASSWORD| Contraseña de PostgreSQL                 | - (requerido para Docker)  |
+| Variable          | Descripción                              | Default                   |
+| ----------------- | ----------------------------------------- | ------------------------- |
+| DATABASE_URL      | Cadena de conexión PostgreSQL            | -                         |
+| SECRET_KEY        | Clave para firmar JWT (32+ chars)         | - (requerido)             |
+| ADMIN_USER        | Usuario del dashboard                     | admin                     |
+| ADMIN_PASSWORD    | Contraseña del dashboard                 | - (requerido)             |
+| ALLOWED_ORIGINS   | Orígenes CORS permitidos (coma-separado) | http://localhost:8080,... |
+| POSTGRES_DB       | Nombre de la base de datos                | ses_dashboard             |
+| POSTGRES_USER     | Usuario de PostgreSQL                     | user                      |
+| POSTGRES_PASSWORD | Contraseña de PostgreSQL                 | - (requerido para Docker) |
 
 Generar SECRET_KEY:
 
