@@ -2438,7 +2438,7 @@
         <button class="asb-item" id="nav-alerts" onclick="showView('alerts')" data-tooltip="Alertas">
           <span class="asb-item-dot" style="background:var(--orange)"></span>
           <span class="asb-item-label">Alertas</span>
-          <span class="asb-item-count" id="alerts-count" style="display:none">0</span>
+          <span class="asb-item-count hidden" id="alerts-count">0</span>
         </button>
         
         <a class="asb-item" id="nav-reports" href="analytics.html" data-tooltip="Reportes">
@@ -2506,7 +2506,7 @@
       </div>
 
       <!-- BLOCKED -->
-      <div id="view-blocked" class="view-blocked" style="display:none">
+      <div id="view-blocked" class="view-blocked hidden">
         <div class="topbar">
           <span class="topbar-title">Correos bloqueados</span>
         </div>
@@ -2531,7 +2531,7 @@
       </div>
 
       <!-- ALERTS -->
-      <div id="view-alerts" class="view-alerts" style="display:none">
+      <div id="view-alerts" class="view-alerts hidden">
         <div class="topbar">
           <span class="topbar-title">Alertas de Deliverability</span>
           <div class="topbar-filters">
@@ -2723,7 +2723,7 @@
         }
         renderList(data);
       } catch (e) {
-        list.innerHTML = `<div class="error-msg">Error al cargar: ${e.message}</div>`;
+        list.innerHTML = `<div class="error-msg">Error al cargar: ${esc(e.message)}</div>`;
       }
     }
 
@@ -2737,7 +2737,7 @@
 
       list.innerHTML = items.map(e => `
       <div class="email-row ${selectedEmailId === e.id ? 'selected' : ''}"
-        onclick="openEmail(${e.id}, this)">
+        onclick="openEmail(${parseInt(e.id)}, this)">
       <div class="er-flags">
         ${e.has_bounce ? '<div class="flag bounce" title="Bounce"></div>' : ''}
         ${e.has_complaint ? '<div class="flag complaint" title="Complaint"></div>' : ''}
@@ -2779,7 +2779,7 @@
         const e = await apiFetch(`/emails/${id}`);
         renderDetail(e, detail);
       } catch (err) {
-        detail.innerHTML = `<div class="detail-empty"><p style="color:var(--red)">Error: ${err.message}</p></div>`;
+        detail.innerHTML = `<div class="detail-empty"><p style="color:var(--red)">Error: ${esc(err.message)}</p></div>`;
       }
     }
 
@@ -2910,7 +2910,7 @@
           </tr>`).join('')
           : '<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--text3)">Sin bloqueos registrados</td></tr>';
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="3" class="error-msg">Error: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" class="error-msg">Error: ${esc(e.message)}</td></tr>`;
       }
     }
 
@@ -2945,19 +2945,19 @@
         }
         
         list.innerHTML = alerts.map(a => `
-          <div class="alert-item ${a.severity} ${a.is_read ? '' : 'unread'}">
+          <div class="alert-item ${esc(a.severity)} ${a.is_read ? '' : 'unread'}">
             <div class="alert-icon">${a.severity === 'critical' ? '⚠' : '⚡'}</div>
             <div class="alert-content">
               <div class="alert-title">${esc(a.title)}</div>
               <div class="alert-message">${esc(a.message)}</div>
               <div class="alert-meta">
-                <span>${a.alert_type}</span>
+                <span>${esc(a.alert_type)}</span>
                 <span>${fmtDateFull(a.created_at)}</span>
               </div>
             </div>
             <div class="alert-actions">
-              ${!a.is_read ? `<button class="alert-btn" onclick="markAlertRead(${a.id})">Marcar leída</button>` : ''}
-              ${!a.is_resolved ? `<button class="alert-btn resolve" onclick="resolveAlert(${a.id})">Resolver</button>` : ''}
+              ${!a.is_read ? `<button class="alert-btn" onclick="markAlertRead(${parseInt(a.id)})">Marcar leída</button>` : ''}
+              ${!a.is_resolved ? `<button class="alert-btn resolve" onclick="resolveAlert(${parseInt(a.id)})">Resolver</button>` : ''}
             </div>
           </div>
         `).join('');
@@ -3020,7 +3020,7 @@
     // ── HELPERS ───────────────────────────────────────────
     function esc(s) {
       if (!s) return '';
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     function formatSize(bytes) {
@@ -3136,15 +3136,15 @@
       const body = document.getElementById('pdf-modal-body');
 
       if (url && ext === 'PDF') {
-        body.innerHTML = `<iframe src="${url}#toolbar=1&navpanes=0" style="width:100%;height:100%;border:none;"></iframe>`;
+        body.innerHTML = `<iframe src="${esc(url)}#toolbar=1&navpanes=0" style="width:100%;height:100%;border:none;"></iframe>`;
       } else if (url && ['PNG', 'JPG', 'JPEG', 'GIF', 'WEBP'].includes(ext)) {
         body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#222;">
-      <img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+      <img src="${esc(url)}" style="max-width:100%;max-height:100%;object-fit:contain;" />
     </div>`;
       } else {
         body.innerHTML = `<div class="pdf-nopreview">
       <div class="pnp-icon">📄</div>
-      <p><strong>${name}</strong></p>
+      <p><strong>${esc(name)}</strong></p>
       <p style="color:var(--text3);font-size:12px">Vista previa no disponible — el archivo no tiene URL de acceso directo almacenada.</p>
       <p style="color:var(--text3);font-size:12px">Puedes almacenar la URL en el campo <code>attachments[].url</code> del JSONB.</p>
     </div>`;

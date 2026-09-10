@@ -145,7 +145,7 @@ const ReportsModule = (() => {
         } catch (err) {
             _hideProgress();
             AlertsModule?.showToast('❌ Error al generar datos: ' + err.message, 'error');
-            console.error('[ReportsModule]', err);
+            logger.error('[ReportsModule]', err);
             return;
         }
 
@@ -174,7 +174,7 @@ const ReportsModule = (() => {
         } catch (err) {
             _hideProgress();
             AlertsModule?.showToast('❌ Error al generar PDF: ' + err.message, 'error');
-            console.error('[ReportsModule]', err);
+            logger.error('[ReportsModule]', err);
             return;
         }
 
@@ -435,7 +435,7 @@ const ReportsModule = (() => {
         const btn = document.getElementById('btn-pdf');
         if (btn) btn.classList.add('loading');
         download().catch(err => {
-            console.error('[ReportsModule] download failed', err);
+            logger.error('[ReportsModule] download failed', err);
             AlertsModule?.showToast('❌ Error al generar PDF', 'error');
             _hideProgress();
         });

@@ -71,7 +71,7 @@
                 <div class="instructions-box">
                     <h3>Pasos para crear usuario IAM:</h3>
                     <ol>
-                        <li>Ve a <a href="https://console.aws.amazon.com/iam/" target="_blank">AWS IAM Console</a></li>
+                        <li>Ve a <a href="https://console.aws.amazon.com/iam/" target="_blank" rel="noopener noreferrer">AWS IAM Console</a></li>
                         <li>Crear usuario → Nombre: <code>ses-dashboard</code></li>
                         <li>Adjuntar políticas: <code>AmazonSESFullAccess</code> y <code>AmazonSNSFullAccess</code></li>
                         <li>Crear usuario → Guardar Access Key y Secret Key</li>
@@ -229,6 +229,7 @@ aws sns subscribe --topic-arn ARN_DEL_TOPIC --protocol https --notification-endp
         </main>
     </div>
 
+    <script src="js/config.js"></script>
     <script src="js/onboarding.js"></script>
 </body>
 </html>

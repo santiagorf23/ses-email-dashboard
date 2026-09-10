@@ -30,12 +30,10 @@ const ActionsModule = (() => {
 
     /* ── Configuración ───────────────────────────────── */
     const API_BASE = CONFIG ? CONFIG.API_BASE_URL : 'http://localhost:8000/api';
-    const DEV_MODE = false;   // false → usa endpoints reales del backend
-    const TZ = 'America/Bogota';
 
     /* ── Helpers de fetch ────────────────────────────── */
     function _token() {
-        return localStorage.getItem('ses_token') || '';
+        return localStorage.getItem(CONFIG?.TOKEN_KEY || 'ses_token') || '';
     }
 
     function _headers() {
@@ -50,10 +48,6 @@ const ActionsModule = (() => {
         if (body) opts.body = JSON.stringify(body);
         const res = await fetch(API_BASE + path, opts);
 
-        // En DEV_MODE aceptamos 404/405/422 como "no implementado aún" → OK simulado
-        if (DEV_MODE && (res.status === 404 || res.status === 405 || res.status === 422)) {
-            return { ok: true, simulated: true };
-        }
         if (!res.ok) {
             let msg = `HTTP ${res.status}`;
             try { const j = await res.json(); msg = j.detail || j.message || msg; } catch { /* ok */ }
@@ -111,7 +105,7 @@ const ActionsModule = (() => {
             _setRowPending(row, false);
             _flashRow(row, 'error');
             AlertsModule?.showToast('❌ No se pudo reenviar: ' + err.message, 'error', 4000);
-            console.error('[ActionsModule.resend]', err);
+            logger.error('[ActionsModule.resend]', err);
         }
     }
 
@@ -162,7 +156,7 @@ const ActionsModule = (() => {
             _setRowPending(row, false);
             _flashRow(row, 'error');
             AlertsModule?.showToast('❌ No se pudo eliminar: ' + err.message, 'error', 4000);
-            console.error('[ActionsModule.delete]', err);
+            logger.error('[ActionsModule.delete]', err);
         }
     }
 
@@ -213,7 +207,7 @@ const ActionsModule = (() => {
             _setRowPending(row, false);
             _flashRow(row, 'error');
             AlertsModule?.showToast('❌ No se pudo bloquear: ' + err.message, 'error', 4000);
-            console.error('[ActionsModule.block]', err);
+            logger.error('[ActionsModule.block]', err);
         }
     }
 
@@ -270,9 +264,11 @@ const ActionsModule = (() => {
 
         o.addEventListener('click', e => { if (e.target === o) _closeConfirmModal(); });
         o.querySelector('#action-cancel-btn').addEventListener('click', _closeConfirmModal);
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') _closeConfirmModal(); });
         return o;
     }
+
+    // Register Escape key listener once (not per modal build)
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') _closeConfirmModal(); });
 
     function _closeConfirmModal() {
         document.getElementById('action-confirm-overlay')?.classList.remove('open');

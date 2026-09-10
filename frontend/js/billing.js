@@ -22,7 +22,7 @@ let billingInterval = 'monthly';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Check auth
-  if (!localStorage.getItem('ses_token')) {
+  if (!localStorage.getItem(CONFIG?.TOKEN_KEY || 'ses_token')) {
     window.location.href = '/';
     return;
   }
@@ -55,7 +55,7 @@ async function loadSubscription() {
       updatePlanUI(data);
     }
   } catch (error) {
-    console.error('Error loading subscription:', error);
+    logger.error('Error loading subscription:', error);
   }
 }
 
@@ -72,7 +72,7 @@ async function loadInvoices() {
       updateInvoicesTable(data.invoices);
     }
   } catch (error) {
-    console.error('Error loading invoices:', error);
+    logger.error('Error loading invoices:', error);
   }
 }
 
@@ -101,7 +101,7 @@ async function upgradePlan(planId) {
       alert('Error: ' + (error.detail || 'Failed to create checkout'));
     }
   } catch (error) {
-    console.error('Error upgrading plan:', error);
+    logger.error('Error upgrading plan:', error);
     alert('Error al procesar el pago. Por favor, intenta de nuevo.');
   }
 }
@@ -127,7 +127,7 @@ async function cancelSubscription() {
       alert('Error: ' + (error.detail || 'Failed to cancel subscription'));
     }
   } catch (error) {
-    console.error('Error cancelling subscription:', error);
+    logger.error('Error cancelling subscription:', error);
     alert('Error al cancelar la suscripción.');
   }
 }

@@ -21,7 +21,7 @@ const ChartsModule = (() => {
         dateTo: null,
         theme: localStorage.getItem('mt_theme') || 'dark',
         apiBase: CONFIG ? CONFIG.API_BASE_URL : 'http://localhost:8000/api',
-        token: localStorage.getItem('ses_token') || '',
+        token: localStorage.getItem(CONFIG?.TOKEN_KEY || 'ses_token') || '',
         charts: {},
         rawItems: [],
         stats: null,
@@ -295,7 +295,7 @@ const ChartsModule = (() => {
             AlertsModule?.render(document.getElementById('alert-container'), stats);
 
         } catch (err) {
-            console.warn('[ChartsModule] API no disponible, usando datos demo.', err.message);
+            logger.warn('[ChartsModule] API no disponible, usando datos demo.', err.message);
             _useDemoData();
         }
     }
@@ -521,10 +521,10 @@ const ChartsModule = (() => {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: cs.getPropertyValue('--surface').trim() || (light ? '#fff' : '#18181b'),
-                    borderColor: cs.getPropertyValue('--border2').trim() || (light ? '#e2e6ec' : '#2a303a'), borderWidth: 1,
-                    titleColor: cs.getPropertyValue('--text').trim() || (light ? '#111827' : '#f0f2f5'),
-                    bodyColor: cs.getPropertyValue('--text2').trim() || (light ? '#4b5563' : '#8b95a6'),
+                    backgroundColor: cc.surface,
+                    borderColor: cc.border, borderWidth: 1,
+                    titleColor: cc.text,
+                    bodyColor: cc.tick,
                     titleFont: { family: 'Inter', weight: '700', size: 12 },
                     bodyFont: { family: 'JetBrains Mono', size: 11 },
                     padding: 10, cornerRadius: 8,
@@ -613,15 +613,15 @@ const ChartsModule = (() => {
                 labels: segs.map(s => s.label),
                 datasets: [{
                     data: segs.map(s => s.value), backgroundColor: segs.map(s => s.color),
-                    borderColor: _s.theme === 'light' ? '#fff' : '#0d0f12', borderWidth: 3, hoverOffset: 6
+                    borderColor: cc.surface, borderWidth: 3, hoverOffset: 6
                 }],
             }, options: {
                 responsive: true, cutout: '68%', plugins: {
                     legend: { display: false }, tooltip: {
-                        backgroundColor: _s.theme === 'light' ? '#fff' : '#18181b',
-                        borderColor: _s.theme === 'light' ? '#e2e6ec' : '#2a303a', borderWidth: 1,
-                        titleColor: _s.theme === 'light' ? '#111827' : '#f0f2f5',
-                        bodyColor: _s.theme === 'light' ? '#4b5563' : '#8b95a6',
+                        backgroundColor: cc.surface,
+                        borderColor: cc.border, borderWidth: 1,
+                        titleColor: cc.text,
+                        bodyColor: cc.tick,
                         titleFont: { family: 'Inter', weight: '700', size: 12 }, bodyFont: { family: 'JetBrains Mono', size: 11 },
                         padding: 10, cornerRadius: 8,
                         callbacks: { label: ctx => ` ${ctx.label}: ${Number(ctx.parsed).toLocaleString('es-CO')} (${total > 0 ? (ctx.parsed / total * 100).toFixed(1) : 0}%)` },
@@ -910,15 +910,19 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
        UTILIDADES
     ══════════════════════════════════════════════ */
     function _colors() {
-        const l = _s.theme === 'light';
+        const cs = getComputedStyle(document.documentElement);
+        const get = (v, fallback) => cs.getPropertyValue(v).trim() || fallback;
         return {
-            grid: l ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.04)',
-            tick: l ? '#6b7280' : '#52525b',
-            blue: l ? '#0284c7' : '#93c5fd',
-            green: l ? '#0d9488' : '#5eead4',
-            red: l ? '#dc2626' : '#fca5a5',
-            orange: l ? '#ea580c' : '#fdba74',
-            yellow: l ? '#ca8a04' : '#fde047',
+            grid: get('--border', 'rgba(255,255,255,.04)'),
+            tick: get('--text2', '#8b95a6'),
+            blue: get('--blue', '#93c5fd'),
+            green: get('--accent', '#5eead4'),
+            red: get('--red', '#fca5a5'),
+            orange: get('--orange', '#fdba74'),
+            yellow: get('--yellow', '#fde047'),
+            surface: get('--surface', '#18181b'),
+            border: get('--border2', '#2a303a'),
+            text: get('--text', '#f0f2f5'),
         };
     }
 

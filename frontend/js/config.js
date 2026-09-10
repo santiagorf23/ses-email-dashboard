@@ -17,6 +17,22 @@ const CONFIG = {
     
     // Timeouts
     REQUEST_TIMEOUT: 30000, // 30 segundos
+
+    // Auth
+    TOKEN_KEY: 'ses_token',
+
+    // Timezone
+    TIMEZONE: 'America/Bogota',
+
+    // Debug mode
+    DEBUG: false,
+};
+
+// Conditional logger - only outputs when DEBUG is true
+const logger = {
+    log: (...args) => { if (CONFIG.DEBUG) console.log(...args); },
+    warn: (...args) => { if (CONFIG.DEBUG) console.warn(...args); },
+    error: (...args) => { if (CONFIG.DEBUG) console.error(...args); },
 };
 
 // Exportar para uso en módulos

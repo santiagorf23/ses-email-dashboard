@@ -7,7 +7,7 @@ let pollingInterval = null;
 
 // Get token from localStorage
 function getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem(CONFIG?.TOKEN_KEY || 'ses_token');
 }
 
 // API helper
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             goToStep(status.current_step);
         }
     } catch (error) {
-        console.error('Failed to load onboarding status:', error);
+        logger.error('Failed to load onboarding status:', error);
     }
 });
 
