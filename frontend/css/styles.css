@@ -936,6 +936,20 @@ a           { color: inherit; text-decoration: none; }
   /* Etiqueta del export solo ícono */
   .btn-export-label { display:none; }
   .btn-export { padding:0 10px; }
+  /* Email row: hide date and status */
+  .email-row { grid-template-columns: 16px 1fr 58px; }
+  .er-date, .er-status { display: none; }
+  /* Pagination compact */
+  .pagination { padding: 6px 8px; }
+  .pag-info { font-size: 9px; }
+  /* View content padding */
+  .view-content { padding: 12px; }
+  /* Login responsive */
+  .login-wrap { width: 100%; max-width: 340px; padding: 0 16px; }
+  /* Flag dots */
+  .flag { width: 6px; height: 6px; }
+  /* Message ID responsive */
+  .msg-id { max-width: 150px; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1326,49 +1340,6 @@ a           { color: inherit; text-decoration: none; }
   }
 }
 
-/* 600px: KPIs single column, hide secondary elements */
-@media (max-width: 600px) {
-  /* Email row: hide date and status on small screens */
-  .email-row {
-    grid-template-columns: 16px 1fr 58px;
-  }
-  .er-date,
-  .er-status {
-    display: none;
-  }
-
-  /* Pagination compact */
-  .pagination {
-    padding: 6px 8px;
-  }
-  .pag-info {
-    font-size: 9px;
-  }
-
-  /* View content padding */
-  .view-content {
-    padding: 12px;
-  }
-
-  /* Login responsive */
-  .login-wrap {
-    width: 100%;
-    max-width: 340px;
-    padding: 0 16px;
-  }
-
-  /* Flag dots slightly larger */
-  .flag {
-    width: 6px;
-    height: 6px;
-  }
-
-  /* Message ID responsive */
-  .msg-id {
-    max-width: 150px;
-  }
-}
-
 /* 480px: Very small phones */
 @media (max-width: 480px) {
   /* Email row: single column */
@@ -1605,6 +1576,18 @@ a:focus-visible {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ═══════════════════════════════════════════════════
+   §24b  UTILITY CLASSES
+   ═══════════════════════════════════════════════════ */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-italic { font-style: italic; }
+.overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.border-none { border: none; }
+.min-h-300 { min-height: 300px; }
 
 /* ═══════════════════════════════════════════════════
    §25  PRINT STYLES
