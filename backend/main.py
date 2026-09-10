@@ -2,8 +2,9 @@ import os
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import emails, auth, tenants, webhooks, onboarding, alerts, reports, export, email_verification, ab_testing, heatmap, ses_send, billing
+from routers import emails, auth, tenants, webhooks, onboarding, alerts, reports, export, email_verification, ab_testing, heatmap, ses_send, billing, outbound_webhooks
 from middleware.tenant import TenantMiddleware
+from middleware.plan_enforcement import PlanEnforcementMiddleware
 from db.database import init_pool, shutdown_pool
 import uvicorn
 
@@ -25,6 +26,7 @@ app.add_middleware(
 )
 
 app.add_middleware(TenantMiddleware)
+app.add_middleware(PlanEnforcementMiddleware)
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(tenants.router, prefix="/api/tenants", tags=["tenants"])
@@ -39,6 +41,7 @@ app.include_router(ab_testing.router, prefix="/api/ab-tests", tags=["ab-testing"
 app.include_router(heatmap.router, prefix="/api/heatmap", tags=["heatmap"])
 app.include_router(ses_send.router, prefix="/api/ses", tags=["ses-send"])
 app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
+app.include_router(outbound_webhooks.router, prefix="/api/webhooks/outbound", tags=["outbound-webhooks"])
 
 
 @app.on_event("startup")
@@ -46,11 +49,21 @@ async def startup():
     logger.info("Iniciando SES Mail Dashboard v2.0 (Multi-Tenant)...")
     await init_pool()
     logger.info("Pool de conexiones inicializado")
+    try:
+        from services.report_scheduler import start_scheduler
+        start_scheduler()
+    except Exception as e:
+        logger.warning("Report scheduler failed to start: %s", e)
 
 
 @app.on_event("shutdown")
 async def shutdown():
     logger.info("Apagando SES Mail Dashboard...")
+    try:
+        from services.report_scheduler import stop_scheduler
+        stop_scheduler()
+    except Exception:
+        pass
     await shutdown_pool()
 
 

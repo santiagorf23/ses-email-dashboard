@@ -119,6 +119,15 @@
             <span class="btn-export-label">PDF</span>
           </button>
 
+          <!-- Server-side PDF → backend /api/reports/pdf -->
+          <button id="btn-pdf-server" class="btn-pdf"
+            aria-label="Descargar PDF del servidor"
+            title="Descargar reporte PDF generado en el servidor"
+            onclick="downloadServerPDF()">
+            <span class="pdf-icon">📥</span>
+            <span class="btn-export-label">PDF Server</span>
+          </button>
+
         </div>
       </header>
 
@@ -320,6 +329,31 @@
         window.location.href = 'index.html';
       }
     }());
+
+    async function downloadServerPDF() {
+      const token = localStorage.getItem('ses_token');
+      if (!token) { window.location.href = 'index.html'; return; }
+      const btn = document.getElementById('btn-pdf-server');
+      if (btn) btn.classList.add('loading');
+      try {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/reports/pdf?days=30`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('Error generating PDF');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mailpulse-report-30d.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        AlertsModule?.showToast('PDF downloaded', 'ok');
+      } catch (e) {
+        AlertsModule?.showToast('Error: ' + e.message, 'error');
+      } finally {
+        if (btn) btn.classList.remove('loading');
+      }
+    }
   </script>
 
 </body>

@@ -2,9 +2,11 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from db.database import get_conn
 from routers.auth import get_current_user
+from services.pdf_generator import generate_report_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -270,3 +272,42 @@ def _get_reputation_label(score: int) -> str:
         return "fair"
     else:
         return "poor"
+
+
+@router.get("/pdf")
+async def download_report_pdf(
+    days: int = Query(30, ge=1, le=365),
+    conn=Depends(get_conn),
+    current_user: dict = Depends(get_current_user)
+):
+    """Download deliverability report as PDF."""
+    tenant_id = current_user["tenant_id"]
+
+    overall = await _get_overall_stats(conn, tenant_id, days)
+    domains = await _get_domain_report_data(conn, tenant_id, days)
+    trends = await _get_trend_data(conn, tenant_id, days)
+
+    report_data = {
+        "period_days": days,
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "total_sent": overall["total_sent"],
+        "total_delivered": overall["total_delivered"],
+        "total_bounced": overall["total_bounced"],
+        "total_complaints": overall["total_complaints"],
+        "total_opened": overall["total_opened"],
+        "overall_delivery_rate": overall["delivery_rate"],
+        "overall_bounce_rate": overall["bounce_rate"],
+        "overall_complaint_rate": overall["complaint_rate"],
+        "overall_open_rate": overall["open_rate"],
+        "domains": domains,
+        "trends": [{"date": str(t["date"]), **t} for t in trends],
+    }
+
+    pdf_buffer = generate_report_pdf(report_data)
+    filename = f"mailpulse-report-{days}d.pdf"
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
