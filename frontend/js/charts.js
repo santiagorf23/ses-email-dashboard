@@ -846,7 +846,7 @@ const ChartsModule = (() => {
         ]);
         const csv = [header, ...rows].map(r => r.join(',')).join('\n');
         const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-        _download(blob, `mailtrack-${_dateTag()}.csv`);
+        _download(blob, `mailpulse-${_dateTag()}.csv`);
         AlertsModule?.showToast('✓ CSV descargado', 'ok');
         _closeExportMenu();
     }
@@ -887,7 +887,7 @@ ${rows.map(r => `<Row>${r.map(c => `<Cell><Data ss:Type="String">${esc(c)}</Data
 </Table></Worksheet></Workbook>`;
 
         const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-        _download(blob, `mailtrack-${_dateTag()}.xls`);
+        _download(blob, `mailpulse-${_dateTag()}.xls`);
         AlertsModule?.showToast('✓ Excel descargado', 'ok');
         _closeExportMenu();
     }

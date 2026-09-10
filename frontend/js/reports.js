@@ -178,7 +178,7 @@ const ReportsModule = (() => {
             return;
         }
 
-        const filename = `mailtrack-reporte-${_dateTag()}.pdf`;
+        const filename = `mailpulse-reporte-${_dateTag()}.pdf`;
         doc.save(filename);
         _hideProgress();
         AlertsModule?.showToast('✅ Reporte PDF descargado', 'ok', 3000);
@@ -204,7 +204,7 @@ const ReportsModule = (() => {
 
         // Nombre de la app
         _text(doc, 'Mail', ML + 14, 21, { color: PDF.C_TEXT, size: 16, style: 'bold' });
-        _text(doc, 'Track', ML + 31, 21, { color: PDF.C_ACCENT, size: 16, style: 'bold' });
+        _text(doc, 'Pulse', ML + 31, 21, { color: PDF.C_ACCENT, size: 16, style: 'bold' });
 
         // Subtítulo del reporte
         _text(doc, 'Reporte de Entregabilidad SES', ML, 32, { color: PDF.C_TEXT2, size: 10 });
