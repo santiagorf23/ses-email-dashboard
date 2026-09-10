@@ -445,8 +445,12 @@ async def _create_alert(
             "domain": None
         }
         
-        # Get tenant notification config (default empty)
-        tenant_config = {}
+        # Fetch tenant notification config from database
+        row = await conn.fetchval(
+            "SELECT notification_config FROM tenants WHERE id = $1",
+            tenant_id
+        )
+        tenant_config = row if row else {}
         
         await notify_alert_created({}, alert_data, tenant_config)
     except Exception as e:

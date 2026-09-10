@@ -53,7 +53,7 @@ async def configure_ses(
     }, tenant_id)
     
     # Initialize SES service
-    init_ses_service(config.aws_access_key_id, config.aws_secret_access_key, config.region)
+    init_ses_service(tenant_id, config.aws_access_key_id, config.aws_secret_access_key, config.region)
     
     return {"status": "configured", "region": config.region, "source": config.source_email}
 
@@ -78,9 +78,10 @@ async def send_email(
     config = row["ses_config"]
     
     # Initialize SES service if not already done
-    ses = get_ses_service()
+    ses = get_ses_service(tenant_id)
     if not ses:
         ses = init_ses_service(
+            tenant_id,
             config["aws_access_key_id"],
             config["aws_secret_access_key"],
             config["region"]
@@ -137,6 +138,7 @@ async def verify_email(
     
     # Initialize SES service
     ses = init_ses_service(
+        tenant_id,
         config["aws_access_key_id"],
         config["aws_secret_access_key"],
         config["region"]
@@ -171,6 +173,7 @@ async def get_send_quota(
     
     # Initialize SES service
     ses = init_ses_service(
+        tenant_id,
         config["aws_access_key_id"],
         config["aws_secret_access_key"],
         config["region"]
@@ -202,6 +205,7 @@ async def get_send_statistics(
     
     # Initialize SES service
     ses = init_ses_service(
+        tenant_id,
         config["aws_access_key_id"],
         config["aws_secret_access_key"],
         config["region"]

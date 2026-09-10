@@ -23,7 +23,7 @@ ALTER TABLE ab_tests ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies
 CREATE POLICY ab_tests_tenant_isolation ON ab_tests
-    USING (tenant_id = current_setting('app.current_tenant_id')::INTEGER);
+    USING (tenant_id = current_setting('app.current_tenant')::INTEGER);
 
 -- Heatmap data table
 CREATE TABLE IF NOT EXISTS email_engagement (
@@ -46,4 +46,4 @@ ALTER TABLE email_engagement ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies
 CREATE POLICY email_engagement_tenant_isolation ON email_engagement
-    USING (tenant_id = current_setting('app.current_tenant_id')::INTEGER);
+    USING (tenant_id = current_setting('app.current_tenant')::INTEGER);

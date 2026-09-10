@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 import asyncpg
 from typing import AsyncGenerator
+from fastapi import Request
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
@@ -28,12 +29,22 @@ async def get_conn() -> AsyncGenerator[asyncpg.Connection, None]:
         yield conn
 
 
-async def get_conn_with_tenant(tenant_id: int) -> AsyncGenerator[asyncpg.Connection, None]:
-    """Get connection with tenant context set for RLS."""
+async def get_tenant_conn(request: Request) -> AsyncGenerator[asyncpg.Connection, None]:
+    """Get connection with tenant context set for RLS.
+    
+    Extracts tenant_id from request state (set by TenantMiddleware)
+    and sets the PostgreSQL session variable for RLS policies.
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
     pool = await get_pool()
     async with pool.acquire() as conn:
-        await conn.execute("SET app.current_tenant = $1", str(tenant_id))
-        yield conn
+        if tenant_id:
+            await conn.execute("SET app.current_tenant = $1", str(tenant_id))
+        try:
+            yield conn
+        finally:
+            if tenant_id:
+                await conn.execute("RESET app.current_tenant")
 
 
 async def close_pool():

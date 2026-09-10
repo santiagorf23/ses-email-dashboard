@@ -122,17 +122,17 @@ class SESService:
             return {}
 
 
-# Global instance
-ses_service: Optional[SESService] = None
+# Per-tenant cache (avoids singleton overwriting credentials)
+_ses_clients: dict[int, SESService] = {}
 
 
-def get_ses_service() -> Optional[SESService]:
-    """Get SES service instance."""
-    return ses_service
+def get_ses_service(tenant_id: int) -> Optional[SESService]:
+    """Get SES service instance for a specific tenant."""
+    return _ses_clients.get(tenant_id)
 
 
-def init_ses_service(aws_access_key_id: str, aws_secret_access_key: str, region: str = "us-east-1") -> SESService:
-    """Initialize SES service."""
-    global ses_service
-    ses_service = SESService(aws_access_key_id, aws_secret_access_key, region)
-    return ses_service
+def init_ses_service(tenant_id: int, aws_access_key_id: str, aws_secret_access_key: str, region: str = "us-east-1") -> SESService:
+    """Initialize SES service for a specific tenant."""
+    service = SESService(aws_access_key_id, aws_secret_access_key, region)
+    _ses_clients[tenant_id] = service
+    return service
