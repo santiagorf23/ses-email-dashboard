@@ -3270,5 +3270,10 @@
       }, 60000);
     };
   </script>
+  <script src="js/scheduler.js"></script>
+  <script>
+    // Start alert scheduler after login
+    if (typeof SchedulerModule !== 'undefined') SchedulerModule.start();
+  </script>
 </body>
 </html>
