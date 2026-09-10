@@ -1,6 +1,8 @@
 # Environment files
 backend/.env
 .env
+.env.local
+.env.*.local
 
 # Python
 backend/venv/
@@ -11,8 +13,16 @@ __pycache__/
 htmlcov/
 .coverage
 
+# Logs
+*.log
+
+# Database
+*.sqlite3
+*.db
+
 # Docker (solo el vacío del root)
 /Dockerfile
+docker-compose.override.yml
 
 # IDE
 .vscode/
@@ -24,3 +34,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
