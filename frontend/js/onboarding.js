@@ -5,6 +5,13 @@ let currentStep = 1;
 let tenantData = {};
 let pollingInterval = null;
 
+// XSS protection
+function esc(s) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(s));
+    return d.innerHTML;
+}
+
 // Get token from localStorage
 function getToken() {
     return localStorage.getItem(CONFIG?.TOKEN_KEY || 'ses_token');
@@ -122,8 +129,8 @@ async function verifyAWS() {
         resultDiv.className = 'verification-result success';
         resultDiv.innerHTML = `
             <p><strong>¡Credenciales verificadas!</strong></p>
-            <p>Cuenta AWS: ${result.account_id}</p>
-            <p>ARN: ${result.arn}</p>
+            <p>Cuenta AWS: ${esc(result.account_id)}</p>
+            <p>ARN: ${esc(result.arn)}</p>
         `;
         
         tenantData.aws_configured = true;
@@ -133,7 +140,7 @@ async function verifyAWS() {
         
     } catch (error) {
         resultDiv.className = 'verification-result error';
-        resultDiv.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+        resultDiv.innerHTML = `<p><strong>Error:</strong> ${esc(error.message)}</p>`;
     }
 }
 
@@ -170,7 +177,7 @@ async function verifyDomain() {
         
     } catch (error) {
         resultDiv.className = 'verification-result error';
-        resultDiv.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+        resultDiv.innerHTML = `<p><strong>Error:</strong> ${esc(error.message)}</p>`;
     }
 }
 
@@ -196,7 +203,7 @@ async function subscribeSNS() {
         resultDiv.className = 'verification-result success';
         resultDiv.innerHTML = `
             <p><strong>¡Suscrito!</strong></p>
-            <p>Subscription ARN: ${result.subscription_arn}</p>
+            <p>Subscription ARN: ${esc(result.subscription_arn)}</p>
             <p>Confirma la suscripción desde el email de AWS SNS.</p>
         `;
         
@@ -204,7 +211,7 @@ async function subscribeSNS() {
         
     } catch (error) {
         resultDiv.className = 'verification-result error';
-        resultDiv.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+        resultDiv.innerHTML = `<p><strong>Error:</strong> ${esc(error.message)}</p>`;
     }
 }
 
@@ -243,7 +250,7 @@ async function sendTestEmail() {
     } catch (error) {
         btn.disabled = false;
         btn.textContent = 'Enviar prueba';
-        status.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
+        status.innerHTML = `<p><strong>Error:</strong> ${esc(error.message)}</p>`;
     }
 }
 

@@ -9,6 +9,13 @@
 
 const API = window.location.origin + '/api';
 
+// XSS protection
+function esc(s) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
@@ -190,13 +197,13 @@ function updateInvoicesTable(invoices) {
   tbody.innerHTML = invoices.map(invoice => `
     <tr>
       <td>${formatDate(invoice.created_at)}</td>
-      <td>$${invoice.amount.toFixed(2)} ${invoice.currency}</td>
+      <td>$${invoice.amount.toFixed(2)} ${esc(invoice.currency)}</td>
       <td>
-        <span class="invoice-status ${invoice.status}">${invoice.status}</span>
+        <span class="invoice-status ${esc(invoice.status)}">${esc(invoice.status)}</span>
       </td>
       <td>
         ${invoice.invoice_url 
-          ? `<a href="${invoice.invoice_url}" target="_blank" class="invoice-link">Download</a>`
+          ? `<a href="${esc(invoice.invoice_url)}" target="_blank" class="invoice-link">Download</a>`
           : '-'
         }
       </td>
