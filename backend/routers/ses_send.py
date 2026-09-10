@@ -5,7 +5,7 @@ from typing import Optional
 from db.database import get_conn
 from routers.auth import get_current_user
 from services.ses_send import (
-    get_ses_service, init_ses_service,
+    get_ses_service, init_ses_service, SESError,
     SendEmailRequest, SendEmailResponse
 )
 
@@ -108,9 +108,12 @@ async def send_email(
         
         return result
         
+    except SESError as e:
+        logger.error("Failed to send email: %s", e)
+        raise HTTPException(status_code=500, detail="Error al enviar el email. Verifica la configuración de SES.")
     except Exception as e:
-        logger.error(f"Failed to send email: {e}")
-        raise HTTPException(status_code=500, detail=f"Error al enviar email: {str(e)}")
+        logger.error("Unexpected error sending email: %s", e)
+        raise HTTPException(status_code=500, detail="Error interno al enviar el email.")
 
 
 @router.post("/verify")

@@ -95,7 +95,7 @@ async def verify_aws_credentials(
 
     except Exception as e:
         logger.error("AWS verification failed: %s", e)
-        raise HTTPException(status_code=400, detail=f"Credenciales AWS inválidas: {str(e)}")
+        raise HTTPException(status_code=400, detail="Credenciales AWS inválidas. Verifica access key, secret key y región.")
 
 
 @router.post("/verify-domain")
@@ -140,7 +140,7 @@ async def verify_domain(
 
     except Exception as e:
         logger.error("Domain verification failed: %s", e)
-        raise HTTPException(status_code=400, detail=f"Error verificando dominio: {str(e)}")
+        raise HTTPException(status_code=400, detail="Error al verificar el dominio. Intenta nuevamente.")
 
 
 @router.post("/subscribe-sns")
@@ -195,7 +195,7 @@ async def subscribe_sns_topic(
 
     except Exception as e:
         logger.error("SNS subscription failed: %s", e)
-        raise HTTPException(status_code=400, detail=f"Error suscribiendo SNS: {str(e)}")
+        raise HTTPException(status_code=400, detail="Error al suscribir el topic SNS. Verifica el ARN.")
 
 
 @router.get("/check-sns")
@@ -247,4 +247,4 @@ async def check_sns_subscription(
 
     except Exception as e:
         logger.error("SNS check failed: %s", e)
-        return {"status": "error", "error": str(e)}
+        return {"status": "error", "error": "Error al verificar la suscripción SNS."}

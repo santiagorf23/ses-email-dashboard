@@ -9,11 +9,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _require_admin(current_user: dict) -> None:
+    """Raise 403 if user is not admin."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+
 @router.get("", response_model=list[TenantResponse])
 async def list_tenants(conn=Depends(get_conn), current_user: dict = Depends(get_current_user)):
     """List all tenants (admin only)."""
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="No autorizado")
+    _require_admin(current_user)
 
     rows = await conn.fetch("SELECT * FROM tenants ORDER BY created_at DESC")
     return [TenantResponse(**dict(r)) for r in rows]
@@ -53,8 +58,7 @@ async def get_tenant_stats(conn=Depends(get_conn), current_user: dict = Depends(
 @router.post("", response_model=TenantResponse)
 async def create_tenant(tenant_data: TenantCreate, conn=Depends(get_conn), current_user: dict = Depends(get_current_user)):
     """Create a new tenant (admin only)."""
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="No autorizado")
+    _require_admin(current_user)
 
     # Check slug uniqueness
     existing = await conn.fetchrow("SELECT id FROM tenants WHERE slug = $1", tenant_data.slug)
@@ -74,8 +78,7 @@ async def create_tenant(tenant_data: TenantCreate, conn=Depends(get_conn), curre
 @router.put("/{tenant_id}", response_model=TenantResponse)
 async def update_tenant(tenant_id: int, tenant_data: TenantUpdate, conn=Depends(get_conn), current_user: dict = Depends(get_current_user)):
     """Update a tenant (admin only)."""
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="No autorizado")
+    _require_admin(current_user)
 
     # Build update query dynamically
     updates = []

@@ -3,6 +3,7 @@ Billing Router
 Endpoints para gestión de suscripciones y pagos con LemonSqueezy.
 """
 
+import json
 import logging
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -253,12 +254,12 @@ async def lemonqueezy_webhook(request: Request):
     body = await request.body()
     signature = request.headers.get("X-Signature", "")
     
-    # Verificar firma (opcional pero recomendado)
-    # if not verify_webhook_signature(body, signature):
-    #     return JSONResponse(status_code=401, content={"error": "Invalid signature"})
+    # Verificar firma del webhook
+    if not verify_webhook_signature(body, signature):
+        logger.warning("Invalid webhook signature from %s", request.client.host if request.client else "unknown")
+        return JSONResponse(status_code=401, content={"error": "Invalid signature"})
     
     try:
-        import json
         payload = json.loads(body)
     except json.JSONDecodeError:
         return JSONResponse(status_code=400, content={"error": "Invalid JSON"})

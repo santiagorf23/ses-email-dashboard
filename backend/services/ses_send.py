@@ -1,4 +1,5 @@
 import logging
+import re
 import boto3
 from botocore.exceptions import ClientError
 from typing import Optional
@@ -6,6 +7,11 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
+
+
+class SESError(Exception):
+    """Custom exception for SES-related errors."""
+    pass
 
 
 class SendEmailRequest(BaseModel):
@@ -54,7 +60,6 @@ class SESService:
                 message['Body']['Text'] = {'Data': request.text_body, 'Charset': 'UTF-8'}
             elif request.html_body:
                 # Auto-generate text from HTML (simple strip)
-                import re
                 text = re.sub(r'<[^>]+>', '', request.html_body)
                 text = re.sub(r'\s+', ' ', text).strip()
                 message['Body']['Text'] = {'Data': text, 'Charset': 'UTF-8'}
@@ -83,7 +88,7 @@ class SESService:
             error_code = e.response['Error']['Code']
             error_message = e.response['Error']['Message']
             logger.error(f"SES send error: {error_code} - {error_message}")
-            raise Exception(f"Error sending email: {error_message}")
+            raise SESError(f"Error sending email: {error_message}")
     
     def verify_email_identity(self, email: str) -> bool:
         """Verify email identity with SES."""

@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -120,7 +121,6 @@ async def get_notification_config(
     # Handle both dict and string cases
     config = row["notification_config"]
     if isinstance(config, str):
-        import json
         config = json.loads(config)
     
     return config
@@ -133,7 +133,6 @@ async def update_notification_config(
     current_user: dict = Depends(get_current_user)
 ):
     """Update notification configuration for current tenant."""
-    import json
     tenant_id = current_user["tenant_id"]
     
     await conn.execute("""

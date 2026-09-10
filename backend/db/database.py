@@ -1,13 +1,11 @@
 import os
-import sys
 from contextlib import asynccontextmanager
 import asyncpg
 from typing import AsyncGenerator
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    print("ERROR: DATABASE_URL no está configurado.", file=sys.stderr)
-    sys.exit(1)
+    raise RuntimeError("DATABASE_URL no está configurado. Define la variable de entorno antes de iniciar.")
 
 _pool: asyncpg.Pool = None
 
@@ -34,7 +32,7 @@ async def get_conn_with_tenant(tenant_id: int) -> AsyncGenerator[asyncpg.Connect
     """Get connection with tenant context set for RLS."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        await conn.execute(f"SET app.current_tenant = '{tenant_id}'")
+        await conn.execute("SET app.current_tenant = $1", str(tenant_id))
         yield conn
 
 

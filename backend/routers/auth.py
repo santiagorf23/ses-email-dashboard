@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import logging
 from collections import defaultdict
@@ -23,6 +22,10 @@ LOGIN_WINDOW_SECONDS = 300
 def _check_rate_limit(ip: str) -> None:
     now = time.time()
     _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW_SECONDS]
+    # Cleanup IPs with no recent attempts (prevent memory leak)
+    empty_ips = [k for k, v in _login_attempts.items() if not v]
+    for k in empty_ips:
+        del _login_attempts[k]
     if len(_login_attempts[ip]) >= MAX_LOGIN_ATTEMPTS:
         raise HTTPException(status_code=429, detail="Demasiados intentos. Intenta en 5 minutos.")
 
@@ -31,8 +34,7 @@ def _record_failed_attempt(ip: str) -> None:
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    print("ERROR: SECRET_KEY no configurado.", file=sys.stderr)
-    sys.exit(1)
+    raise RuntimeError("SECRET_KEY no está configurado. Define la variable de entorno antes de iniciar.")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480

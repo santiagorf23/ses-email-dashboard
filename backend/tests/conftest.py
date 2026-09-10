@@ -1,5 +1,4 @@
 import os
-import sys
 
 # Set test environment variables BEFORE any app imports
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only-1234567890abcdef"
